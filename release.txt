@@ -1,0 +1,15 @@
+Release Notes IQM Tools Lite
+============================
+
+Version 1.0 (09.11.2015)
+------------------------
+- First full release of IQM Lite - the follow-up of SBPOP and SBTOOLBOX2
+- Many improvements with respect to SBPOP (stability, usability, documentation, functionality)
+- Where SBPOP used the "dataset" type, IQM Tools uses the "table" type
+- IQM Tools does not require the presence of the stats toolbox 
+- Parallel computation is used in several functions if the parallel toolbox is available
+- Recommended use of MATLAB >= R2015b (>=R2013B is required)
+- Removed support of SBML Level 1
+- Added support of SBML Level 2, Version 2,3, and 4
+- Implemented "compliance mode" for time and information stamps on figures, tables, text
+
