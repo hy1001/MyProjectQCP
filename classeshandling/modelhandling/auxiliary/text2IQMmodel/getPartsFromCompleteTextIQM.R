@@ -47,5 +47,4 @@ modelTextStructure$events =     substr(modelText, eventsStart + nchar('*********
 modelTextStructure$functionsR = substr( modelText, functionsRStart + nchar('********** MODEL MATLAB FUNCTIONS'), nchar( modelText ) );
 
 modelTextStructure
-##return
 }
