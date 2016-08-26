@@ -10,7 +10,9 @@ getPartsFromCompleteTextIQM <- function( modelText ) {
 #% take commented lines out of the model description
 ##modelText = regexprep(modelText,'\n%[^\n]*','');
 # gsub( "\n%.*", "", "abc\n%hellp goodbye\ntest", perl = TRUE)
+## remove whole-line comments
 modelText = gsub( "\n%.*", "", modelText, perl = TRUE );
+## modelText = gsub( "%.*", "", modelText, perl = TRUE ); # don't remove in-line comments
 
 ###% Find the starts of the different view data
 nameStart = gregexpr( pattern = "\\*\\*\\*\\*\\*\\*\\*\\*\\*\\* MODEL NAME", modelText )[[1]][1];

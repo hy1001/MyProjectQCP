@@ -629,9 +629,20 @@ error = '';
 IQMvariables = struct('name',{},'formula',{},'type',{},'compartment',{},'unittype',{},'notes',{});
 % get the starting indices for the variables by finding the index
 % of the last '\n' before the '=' for each variable
+
+%%disp( variables );
+
 variablesStart = regexp([10 variables],['\n[^\n=]*=']);
+
+%%disp ( '*******' );
+%%disp( variablesStart );
+%%disp ( length( variables ) );
+
 % run through the variables and process them (+1 since endindex = end-1)
 variablesStart = [variablesStart length(variables)+1];
+
+%% disp( variablesStart );
+
 for k = 1:length(variablesStart)-1,
     variableString = removeCharacters(variables(variablesStart(k):variablesStart(k+1)-1));
     % check if additional information is present ... if yes, cut it out

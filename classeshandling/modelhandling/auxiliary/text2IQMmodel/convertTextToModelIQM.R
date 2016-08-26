@@ -1,4 +1,3 @@
-# I am here
 convertTextToModelIQM <- function ( modelText ) {
   ## % convertTextToModelIQM: Converts a text description of an IQMmodel to 
   ## % the internal data structure representation.r
@@ -155,9 +154,9 @@ my.IQMmodel.notes = gsub( "^\\s+|\\s+$", "", modelTextStructure.notes )
 ##     my.IQMmodel.reactions(end).fast = 0;
 ## end
 
-## return my.IQMmodel;
+   return( my.IQMmodel )
 
-}
+} ## end of the main function
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -629,92 +628,74 @@ my.IQMmodel.notes = gsub( "^\\s+|\\s+$", "", modelTextStructure.notes )
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## function [IQMvariables, error] = getVariables(variables)
-## error = '';
-## %    variables = removeWhiteSpace(variables);
-## IQMvariables = struct('name',{},'formula',{},'type',{},'compartment',{},'unittype',{},'notes',{});
+getVariables <- function (variables) {
+	error = '';
+
 ## % get the starting indices for the variables by finding the index
 ## % of the last '\n' before the '=' for each variable
-## variablesStart = regexp([10 variables],['\n[^\n=]*=']);
+	## this is an array for starting locations of each variable
+	variablesStart <- as.numeric( gregexpr ( "\n\\S+", variables )[[1]] );
+
+	IQMvariables <- array( list(), length( variablesStart ) )
+	
 ## % run through the variables and process them (+1 since endindex = end-1)
 ## variablesStart = [variablesStart length(variables)+1];
-## for k = 1:length(variablesStart)-1,
-##     variableString = removeCharacters(variables(variablesStart(k):variablesStart(k+1)-1));
-##     % check if additional information is present ... if yes, cut it out
-##     infoStart = strfind(variableString,'{');
-##     infoEnd = strfind(variableString,'}');
-##     informationText = '';
-##     if length(infoStart) + length(infoEnd) > 2,
-##         error = 'To many curly parentheses in a variable definition';
-##         return
-##     end
-##     if length(infoStart) ~= length(infoEnd),
-##         error = 'At least one variable information not properly defined';
-##         return
-##     end
-##     if length(infoStart) == 1,
-##         informationText = variableString(infoStart+1:infoEnd-1);
-##         variableString = variableString([1:infoStart-1, infoEnd+1:end]);
-##     end
-##     if ~isempty(informationText),
-##         % explode the information text with ':'
-##         terms = explodePCIQM(informationText,':');
-##         if length(terms) == 1 && ~isempty(strfind(lower(terms{1}),'parameter')),
-##             type = strtrim(terms{1});
-##             compartment = '';
-##             unittype = '';
-##         elseif length(terms) == 2 && ~isempty(strfind(lower(terms{1}),'compartment')),
-##             type = strtrim(terms{1});
-##             compartment = strtrim(terms{2});
-##             unittype = '';
-##         elseif length(terms) == 3 && ~isempty(strfind(lower(terms{1}),'specie')),
-##             type = strtrim(terms{1});
-##             compartment = strtrim(terms{2});
-##             unittype = strtrim(terms{3});
-##         else
-##             error = 'Error in a variable information';
-##             return           
-##         end
-##     else 
-##         type = '';
-##         compartment = '';
-##         unittype = '';
-##     end
-##     % extract the variable name
-##     temp = strfind(variableString,'=');
-##     test = variableString(1:temp(1)-1);
-##     % check if variable name given
-##     if isempty(test),
-##         error = sprintf('At least one variable name not given.');
-##         return
-##     end
-##     IQMvariables(k).name = removeWhiteSpace(test);
-##     % extract the variable value
-##     test = variableString(temp+1:end);
+   	variablesStart <- c( variablesStart , nchar( variables ) ) #adding the end pos of variables, but why?
+
+for ( k in 1:( length( variablesStart )-1 )  ) {
+    variableString = removeCharacters(  substr( variables, variablesStart[ k ], variablesStart[ k + 1 ] -1 ) )
+    informationText = ''; ## leave this empty for now
+    if ( nzchar( informationText ) ) { ## if informationText is not empty,
+    } else { ## if informationText is empty
+    	 type = '';
+         compartment = '';
+         unittype = '';
+    }
+
+    ##% extract the variable name
+    temp = gregexpr( "=", variableString )[[1]][1]; # if multiple ='s, always take the first one.
+    test = substr( variableString, 1, temp - 1 );
+    ##% check if variable name given
+    if ( !nzchar( test ) ) {
+       error = "At least one variable name not given.";
+       #return( list( my.IQMmodel, error ) )
+    }
+
+    IQMvariables[[ k ]]$name <- removeWhiteSpace( test )
+    ##% extract the variable value
+    test = substr( variableString, temp + 1, nchar( variableString ) )
 ##     % The test string contains now the variable expression and
 ##     % eventually also a comment that should be written into notes.
 ##     % check if a comment is present
-##     temp = strfind(test,'%');
-##     if ~isempty(temp),
-##         formula = removeWhiteSpace(test(1:temp(1)-1));
-##         notes = strtrim(test(temp(1)+1:end));
-##     else
-##         formula = removeWhiteSpace(test);
-##         notes = '';
-##     end
-##     % check if variable expression given
-##     if isempty(formula),
-##         error = sprintf('At least one variable definition not given.');
-##         return
-##     end
-##     IQMvariables(k).formula = formula;
-##     % add default notes to variable
-##     IQMvariables(k).notes = notes;
-##     % add information to parameter
-##     IQMvariables(k).type = type;
-##     IQMvariables(k).compartment = compartment;
-##     IQMvariables(k).unittype = unittype;    
-## end
+
+    temp = gregexpr( "%", test )[[1]][1];
+    if ( temp > 0 ) {
+       formula <- removeWhiteSpace( substr( test, 1, temp - 1 ))
+       notes <- substr( test, temp + 1, nchar( test ) )
+    } else {
+      formula <- removeWhiteSpace( test )
+      notes <- ""
+    }
+
+    if ( !nzchar( formula ) ) {
+       error = "At least one variable definition not given.";
+    }
+    
+    ### IQMvarialbes is an array of list
+    IQMvariables[[ k ]]$formula <- formula;
+    ##% add default notes to variable
+    IQMvariables[[ k ]]$notes = notes;
+    ##% add information to parameter
+    IQMvariables[[ k ]]$type = type;
+    IQMvariables[[ k ]]$compartment = compartment;
+    IQMvariables[[ k ]]$unittype = unittype;        
+
+} # end of for loop
+
+
+return( list( IQMvariables = IQMvariables, error = error ) )
 ## return
+} ## end of getVariables
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## function [IQMreactions, error] = getReactions(reactions)
@@ -933,9 +914,10 @@ my.IQMmodel.notes = gsub( "^\\s+|\\s+$", "", modelTextStructure.notes )
 ## % Useful for taking away whitespaces in kineticLaw formulas, as
 ## % seen in some example models
 ## function [outputString] = removeWhiteSpace(inputString)
-## outputString = strrep(inputString,' ','');
-## % return
-## return
+removeWhiteSpace <- function( inputString ) {
+		 outputString = gsub ( " ", "", inputString );
+		 return( outputString );
+}
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ### function [output] = removeCharacters(input)
