@@ -141,9 +141,11 @@ if strcmp('empty',inputType),
     IQMstructure = struct('name','unnamed_model','notes','','functions',functionsStruct,'states',statesStruct,'algebraic',algebraicStruct,'parameters',parametersStruct,'variables',variablesStruct,'reactions',reactionsStruct,'events',eventStruct,'functionsMATLAB','','inputs',inputsStruct,'outputs',outputsStruct);
     % construct the model object
     model = class(IQMstructure,'IQMmodel');
+
 elseif strcmp('IQMmodel',inputType),
     % copy the model object
     model = iqmInput;
+
 elseif strcmp('IQMstructure',inputType),
     % check if given structure contains inputs and outputs. If not then add these 
     if ~isfield(IQMstructure,'inputs'),
