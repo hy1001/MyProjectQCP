@@ -175,6 +175,9 @@ my.IQMmodel.notes = gsub( "^\\s+|\\s+$", "", modelTextStructure.notes )
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## function [IQMstates, IQMalgebraic, stateConstraintInfo, error] = getStates(states)
+
+getStates <- function( states ) {
+
 ## global arrayInitialConditions_qayxsw
 ## error = '';
 ## %    states = removeWhiteSpace(states);
@@ -530,7 +533,9 @@ my.IQMmodel.notes = gsub( "^\\s+|\\s+$", "", modelTextStructure.notes )
 ##         end
 ##     end
 ## end
-## return
+
+## return( list( states, alfebraic, stateConstraintInfo, errorStates ) )
+} # end of function getStates
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## function [IQMparameters, error] = getParameters(parameters)
