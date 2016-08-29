@@ -661,12 +661,17 @@ if ( grepl( "\\(0\\)", states ) ) { ## if states do have initial conditions
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## function [IQMparameters, error] = getParameters(parameters)
-## error = '';
+getParameters <- function (parameters) {
+   error = '';
+
 ## %    parameters = removeWhiteSpace(parameters);
 ## IQMparameters = struct('name',{},'value',{},'type',{},'compartment',{},'unittype',{},'notes',{});
+
 ## % get the starting indices for the parameters by finding the index
 ## % of the last '\n' before the '=' for each parameter
 ## parametersStart = regexp([10 parameters],['\n[^\n=]*=']);
+   parametersStart = as.numeric( gregexpr( "\n*\\=", parameters )[[1]] );
+
 ## % run through the parameters and process them (+1 since endindex = end-1)
 ## parametersStart = [parametersStart length(parameters)+1];
 ## parNAN = 0;
@@ -752,6 +757,7 @@ if ( grepl( "\\(0\\)", states ) ) { ## if states do have initial conditions
 ##     error = sprintf('At least one parameter has a\nnon-numerical value assigned');
 ## end
 ## return
+} ## end of getParameters
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## function [IQMvariables, error] = getVariables(variables)
