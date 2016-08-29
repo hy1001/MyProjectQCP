@@ -183,8 +183,6 @@ getStates <- function( states ) {
     ## IQMstates = struct('name',{},'initialCondition',{},'ODE',{},'type',{},'compartment',{},'unittype',{},'notes',{});
 ## IQMalgebraic = struct('name',{},'formula',{},'initialCondition',{},'type',{},'compartment',{},'unittype',{},'notes',{});
 
-    ### IQMstates <- array( list(), length( variablesStart ) )
-
     ## % check if ode definitions are present
 ## if isempty(strfind(states,'d/dt(')),
 ##     error = 'The model does not contain any states';
@@ -199,6 +197,13 @@ getStates <- function( states ) {
 ## ODEtest = strfind(states,'d/dt(');
 ## ARtest = strfind(states,'0 = ');
 ## ICtest = strfind(states,'(0)');
+
+   ODEtest = as.numeric( gregexpr( "d\\/dt\\(", states )[[1]] )
+   IQMstates <- array( list(), length( ODEtest ) )
+
+##   ARtest = as.numeric( gregexpr( "0\ \\= ", states) [[1]]) ## I need to test this!
+   ICtest = as.numeric( gregexpr( "\\(0\\)", states) [[1]])
+   
 ## % check if they come subsequently
 ## if ~isempty(ICtest),
 ##     if max(ODEtest)>min(ICtest),
@@ -206,6 +211,13 @@ getStates <- function( states ) {
 ##         return
 ##     end
 ## end
+   if ( length(ICtest) != 0 ) {
+      if ( max(ODEtest) > min(ICtest) ) {
+      	 error = 'Initial conditions have to be defined\nafter the definition of the ODEs.';
+	 ## return
+      }
+   }
+
 ## if ~isempty(ARtest),
 ##     if max(ODEtest)>min(ARtest),
 ##         error = sprintf('Algebraic rules have to be defined\nafter the definition of the ODEs.');
@@ -218,12 +230,18 @@ getStates <- function( states ) {
 ##         return
 ##     end
 ## end
+
 ## % START OF THE ODEs
 ## ODEsStart = strfind(states,'d/dt(');
+   ODEsStart = as.numeric( gregexpr( "d\\/dt\\(", states )[[1]] )
+   
 ## % START OF THE ALGEBRAIC RULES
 ## ARsStart = regexp(states,'\n0')+1;
+##   ARsStart = as.numeric( gregexpr( "\n0", states )[[1]] )
+
 ## % START OF THE INITIAL CONDITIONS
 ## % (finding the index of the last '\n' before the '(0)' for each initial condition)
+
 ## initialConditionsStart = [];
 ## temp = strfind(states,'(0)');
 ## for k = 1:length(temp),
@@ -231,34 +249,41 @@ getStates <- function( states ) {
 ##     temp3 = find(temp2==10);
 ##     initialConditionsStart = [initialConditionsStart temp3(end)+1];
 ## end
+### use this.....
+## ttt <- gregexpr ( "\n\\S*\\(0\\) \\= [0-9]\\.[0-9]*", states , perl = TRUE)[[1]]
+## substring( states, ttt, ttt+attr( ttt, "match.length" ) )
 
 ## %%%%%%%%%%%%%%%%%%%
 ## % PROCESS ODEs
 ## %%%%%%%%%%%%%%%%%%%
 ## stateConstraintInfo = [];
+   stateConstraintInfo = c();
 
 ## % run through the ODEs and process them
 ## if isempty(ARsStart) && isempty(initialConditionsStart),
 ##     % if no initial conditions are present then use end of states
 ##     % string as end index (+1)
-##     ODEsStart = [ODEsStart length(states)+1];
+       ODEsStart = c( ODEsStart, nchar(states)+1 );
 ## elseif isempty(ARsStart)
 ##     ODEsStart = [ODEsStart initialConditionsStart(1)];
 ## else
 ##     ODEsStart = [ODEsStart ARsStart(1)];
 ## end
+
+
+temp <- gregexpr ( "d\\/dt\\(\\S+\\) \\= .*\n", states , perl = TRUE)[[1]]
+stateString <- substring ( states, temp, temp + attr( temp, "match.length") - 2) # -2 to remove \n at the end
+
 ## for k = 1:length(ODEsStart)-1,
 ##     stateString = removeCharacters(states(ODEsStart(k):ODEsStart(k+1)-1));
+for ( k in 1:( length( ODEsStart )-1 ) ) {
+    stateString.k <- stateString[ k ]
 
-    
-
-    
-    
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-## % Handle possible constraints on state variables in the my.IQMmodel
+## % Handle possible constraints on state variables in the IQMmodel
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## % Check if constraint information is present on a state. Syntax: {constraints:[min,max]}
-## stateConstraints = {};
+   stateConstraints = {};
 ## infoStartConstraints = strfind(stateString,'{constraints:');
 ## if ~isempty(infoStartConstraints),
 ##     % find the end of the constraint information
@@ -289,8 +314,6 @@ getStates <- function( states ) {
 ##     end
 ## end
     
-
-
 ##     % check if additional information is present ... if yes, cut it out
 ##     infoStart = strfind(stateString,'{');
 ##     infoEnd = strfind(stateString,'}');
@@ -327,31 +350,56 @@ getStates <- function( states ) {
 ##             return           
 ##         end
 ##     else 
-##         type = '';
-##         compartment = '';
-##         unittype = '';
+         type = '';
+         compartment = '';
+         unittype = '';
 ##     end
+
+
 ##     % extract the state name
 ##     temp = strfind(stateString,')');
 ##     test = stateString(6:temp(1)-1);
+       temp <- regexpr( ")", stateString.k )[[1]]
+       test <- substr( stateString.k, 6, temp - 1 )
+
 ##     % check if state name given
 ##     if isempty(test),
 ##         error = sprintf('At least on state name in\nODE definition is not given.');
 ##         return
 ##     end
+       if( !nzchar( test ) ) {
+       	   error = 'At least on state name in\nODE definition is not given.';
+	   ### return
+       }
+
+## temp <- unlist( lapply( gregexpr("d\\/dt\\(\\S.*\\)", stateString, perl = TRUE ), function (x) { attr(x, "match.length") } ) )
+## test = substring( stateString, 6, temp-1 )
+
 ##     IQMstates(k).name = removeWhiteSpace(test);
+       IQMstates[[ k ]]$name = removeWhiteSpace( test );
+
 ##     % extract the state ODE
 ##     temp = strfind(stateString,'=');
 ##     test = stateString(temp+1:end);
+       temp <- regexpr( "=", stateString.k )[[1]];
+       test <- substr( stateString.k, temp + 1, nchar( stateString.k ) )
+
 ##     % check if state ODE given
 ##     if isempty(test),
 ##         error = sprintf('At least one RHS of an ODE is not given.');
 ##         return
 ##     end
+       if( !nzchar( test ) ) { # if empty,
+       	   error = 'At least one RHS of an ODE is not given.';
+	   ## return
+       }
+
 ##     % The test string contains now the ODE and eventually also a
 ##     % comment that should be written into notes.
 ##     % check if a comment is present
 ##     temp = strfind(test,'%');
+       temp = regexpr( "%", test )[[1]];
+
 ##     if ~isempty(temp),
 ##         ODE = removeWhiteSpace(test(1:temp(1)-1));
 ##         notes = strtrim(test(temp(1)+1:end));
@@ -359,14 +407,30 @@ getStates <- function( states ) {
 ##         ODE = removeWhiteSpace(test);
 ##         notes = '';
 ##     end
+       if( temp > 0 ) {
+       	   ODE = removeWhiteSpace( substr( test, 1, temp - 1 ) )
+	   notes = substr( test, temp + 1, nchar( stateString.k ) )
+       } else {
+       	   ODE <- removeWhiteSpace( test );
+	   notes = '';
+       }
+
 ##     IQMstates(k).ODE = ODE;
 ##     IQMstates(k).notes = notes;
+       IQMstates[[ k ]]$ODE = ODE;
+       IQMstates[[ k ]]$notes = notes;
+
 ##     % add default value for initial condition
 ##     IQMstates(k).initialCondition = 0;
+       IQMstates[[ k ]]$initialCondition = 0;
+
 ##     % add information to state
 ##     IQMstates(k).type = type;
 ##     IQMstates(k).compartment = compartment;
 ##     IQMstates(k).unittype = unittype;
+       IQMstates[[ k ]]$type = type;
+       IQMstates[[ k ]]$compartment = compartment;
+       IQMstates[[ k ]]$unittype = unittype;
     
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## % Handle possible constraints on state variables in the IQMmodel
@@ -381,7 +445,13 @@ getStates <- function( states ) {
 ##     stateConstraintInfo(end).ODE = IQMstates(k).ODE;
 ## end
 
-## end
+} ## for loop ends
+## end ## for loop ends here
+
+if ( grepl( "0 \\= ", states ) ) { ## if states do have algebraic
+} else { 
+   IQMalgebraic <- array( list(), 0 )
+}
 
 ## %%%%%%%%%%%%%%%%%%%
 ## % PROCESS ARs
@@ -465,6 +535,7 @@ getStates <- function( states ) {
 ##     IQMalgebraic(k).notes = ARnotek;
 ## end
 
+
 ## %%%%%%%%%%%%%%%%%%%
 ## % PROCESS ICs
 ## %%%%%%%%%%%%%%%%%%%
@@ -475,18 +546,37 @@ getStates <- function( states ) {
 ## % First check if any initial conditions are given - if not then don't
 ## % execute this part!
 ## if ~isempty(strfind(states,'(0)')),
+if ( grepl( "\\(0\\)", states ) ) { ## if states do have initial conditions
+
+   temp <- gregexpr ( "\n\\S*\\(0\\) \\= [0-9]\\.[0-9]*", states , perl = TRUE)[[1]]
+   ICstring <- substring( states, temp + 1, temp + attr( temp, "match.length" ) - 1 )
+
 ##     initialConditionsStart = [initialConditionsStart length(states)+1];
+       
 ##     for k1 = 1:length(initialConditionsStart)-1,
+       for ( k1 in 1:length( ICstring ) ) {
+
 ##         ICString = removeWhiteSpace(removeCharacters(states(initialConditionsStart(k1):initialConditionsStart(k1+1)-1)));
+	   ICstring.k <- removeWhiteSpace( removeCharacters( ICstring[ k ] ) )
+	   
 ##         % extract the state name
 ##         temp = strfind(ICString,'(0)');
+	   temp = regexpr( "\\(0\\)", ICstring.k )[1]
+	   
 ##         stateName = ICString(1:temp(1)-1);
+	   stateName <- substr( ICstring.k, 1, temp - 1 )
+	   
 ##         % extract the states' initial condition
 ##         temp = strfind(ICString,'=');
+	   temp = regexpr( "=", ICstring.k )
+	   
 ##         stateIC = ICString(temp+1:end);
+	   stateIC <- substr( ICstring.k, temp + 1, nchar( ICstring.k ) )
+	   
 ##         % cycle through the states in the IQMmodel and add the initial
 ##         % condition at the correct state
-##         statefound = 0;
+	   statefound = 0;
+
 ##         for k2 = 1:length(IQMstates),
 ##             if strcmp(stateName,IQMstates(k2).name),
 ##                 statefound = 1;
@@ -501,6 +591,21 @@ getStates <- function( states ) {
 ##                 break;
 ##             end
 ##         end
+	   for ( k2 in 1:length( IQMstates ) ) {
+	       if ( stateName == IQMstates[[ k2 ]]$name  ) {
+	       	  statefound = 1;
+		  test = as.numeric( stateIC )
+		  if ( is.na( test ) ) {
+		     error =  'At least one initial condition has a non-numerical value assigned.\nThis might lead to problems with certain toolbox functions.';
+		     IQMstates[[ k2 ]]$initialCondition = 0;
+		  } else {
+		     IQMstates[[ k2 ]]$initialCondition = test;
+		  }
+		break;
+	       }
+	   } ## end of k2 for loop
+
+
 ##         % add initial conditions to the algebraic variables if defined
 ##         for k2 = 1:length(IQMalgebraic),
 ##             if strcmp(stateName,IQMalgebraic(k2).name),
@@ -515,7 +620,8 @@ getStates <- function( states ) {
 ##                 end
 ##                 break;
 ##             end
-##         end
+##         end ## end of "add initial conditions to the algebraic variables if defined"
+
 ##         if ~statefound,
 ##             % check if the state IC stems from an array definition
 ##             if isempty(strfind(stateName,'<')),
@@ -538,10 +644,19 @@ getStates <- function( states ) {
 ##                 arrayInitialConditions_qayxsw(end).ic = stateIC;    
 ##             end
 ##         end
-##     end
-## end
 
-## return( list( states, alfebraic, stateConstraintInfo, errorStates ) )
+##     end # end for loop
+       } # end for loop
+## end ## end if
+} ## end of process initial conditions
+
+## return( list( states, algebraic, stateConstraintInfo, errorStates ) )
+   return( list( states = IQMstates ) )
+
+### how to receive and use IQMstates
+##   r <- getStates( states ) # this returns states, algebraic, stateConstraintInfo and errorStates
+##   IQMstates <- r$states 
+
 } # end of function getStates
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -646,6 +761,7 @@ getVariables <- function (variables) {
 ## % get the starting indices for the variables by finding the index
 ## % of the last '\n' before the '=' for each variable
 	## this is an array for starting locations of each variable
+
 	variablesStart <- as.numeric( gregexpr ( "\n\\S+", variables )[[1]] );
 
 	IQMvariables <- array( list(), length( variablesStart ) )

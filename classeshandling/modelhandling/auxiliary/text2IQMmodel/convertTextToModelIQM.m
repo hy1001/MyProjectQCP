@@ -186,6 +186,10 @@ ODEtest = strfind(states,'d/dt(');
 ARtest = strfind(states,'0 = ');
 ICtest = strfind(states,'(0)');
 % check if they come subsequently
+
+% disp( max( ODEtest ))
+% disp( min( ICtest ))
+
 if ~isempty(ICtest),
     if max(ODEtest)>min(ICtest),
         error = sprintf('Initial conditions have to be defined\nafter the definition of the ODEs.');
@@ -212,10 +216,19 @@ ARsStart = regexp(states,'\n0')+1;
 % (finding the index of the last '\n' before the '(0)' for each initial condition)
 initialConditionsStart = [];
 temp = strfind(states,'(0)');
+
+disp( 'temp' );
+disp( temp );
+
 for k = 1:length(temp),
     temp2 = double(states(1:temp(k)));
+disp ( k );
+%disp( 'temp2 ' );
+%disp( temp2 );
     temp3 = find(temp2==10);
+%disp( temp3);
     initialConditionsStart = [initialConditionsStart temp3(end)+1];
+disp( initialConditionsStart );
 end
 
 %%%%%%%%%%%%%%%%%%%
