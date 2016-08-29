@@ -175,19 +175,26 @@ my.IQMmodel.notes = gsub( "^\\s+|\\s+$", "", modelTextStructure.notes )
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## function [IQMstates, IQMalgebraic, stateConstraintInfo, error] = getStates(states)
-
 getStates <- function( states ) {
 
 ## global arrayInitialConditions_qayxsw
-## error = '';
-## %    states = removeWhiteSpace(states);
-## IQMstates = struct('name',{},'initialCondition',{},'ODE',{},'type',{},'compartment',{},'unittype',{},'notes',{});
+    error = '';
+
+    ## IQMstates = struct('name',{},'initialCondition',{},'ODE',{},'type',{},'compartment',{},'unittype',{},'notes',{});
 ## IQMalgebraic = struct('name',{},'formula',{},'initialCondition',{},'type',{},'compartment',{},'unittype',{},'notes',{});
-## % check if ode definitions are present
+
+    ### IQMstates <- array( list(), length( variablesStart ) )
+
+    ## % check if ode definitions are present
 ## if isempty(strfind(states,'d/dt(')),
 ##     error = 'The model does not contain any states';
 ##     return
-## end
+    ## end
+    if ( !grepl( "d\\/dt\\(", states ) ) {
+        error = 'The model does not contain any states';
+        ## return
+    }
+    
 ## % get start of ODEs, ARs, and ICs
 ## ODEtest = strfind(states,'d/dt(');
 ## ARtest = strfind(states,'0 = ');
