@@ -177,587 +177,644 @@ my.IQMmodel.notes = gsub( "^\\s+|\\s+$", "", modelTextStructure.notes )
 ## function [IQMstates, IQMalgebraic, stateConstraintInfo, error] = getStates(states)
 getStates <- function( states ) {
 
-## global arrayInitialConditions_qayxsw
+    ## global arrayInitialConditions_qayxsw
     error = '';
 
     ## IQMstates = struct('name',{},'initialCondition',{},'ODE',{},'type',{},'compartment',{},'unittype',{},'notes',{});
-## IQMalgebraic = struct('name',{},'formula',{},'initialCondition',{},'type',{},'compartment',{},'unittype',{},'notes',{});
+    ## IQMalgebraic = struct('name',{},'formula',{},'initialCondition',{},'type',{},'compartment',{},'unittype',{},'notes',{});
 
     ## % check if ode definitions are present
-## if isempty(strfind(states,'d/dt(')),
-##     error = 'The model does not contain any states';
-##     return
+    ## if isempty(strfind(states,'d/dt(')),
+    ##     error = 'The model does not contain any states';
+    ##     return
     ## end
     if ( !grepl( "d\\/dt\\(", states ) ) {
         error = 'The model does not contain any states';
         ## return
     }
     
-## % get start of ODEs, ARs, and ICs
-## ODEtest = strfind(states,'d/dt(');
-## ARtest = strfind(states,'0 = ');
-## ICtest = strfind(states,'(0)');
+    ## % get start of ODEs, ARs, and ICs
+    ## ODEtest = strfind(states,'d/dt(');
+    ## ARtest = strfind(states,'0 = ');
+    ## ICtest = strfind(states,'(0)');
 
-   ODEtest = as.numeric( gregexpr( "d\\/dt\\(", states )[[1]] )
-   IQMstates <- array( list(), length( ODEtest ) )
+    ODEtest = as.numeric( gregexpr( "d\\/dt\\(", states )[[1]] )
+    IQMstates <- array( list(), length( ODEtest ) )
 
-##   ARtest = as.numeric( gregexpr( "0\ \\= ", states) [[1]]) ## I need to test this!
-   ICtest = as.numeric( gregexpr( "\\(0\\)", states) [[1]])
-   
-## % check if they come subsequently
-## if ~isempty(ICtest),
-##     if max(ODEtest)>min(ICtest),
-##         error = sprintf('Initial conditions have to be defined\nafter the definition of the ODEs.');
-##         return
-##     end
-## end
-   if ( length(ICtest) != 0 ) {
-      if ( max(ODEtest) > min(ICtest) ) {
-      	 error = 'Initial conditions have to be defined\nafter the definition of the ODEs.';
-	 ## return
-      }
-   }
+    ##   ARtest = as.numeric( gregexpr( "0\ \\= ", states) [[1]]) ## I need to test this!
+    ICtest = as.numeric( gregexpr( "\\(0\\)", states) [[1]])
+    
+    ## % check if they come subsequently
+    ## if ~isempty(ICtest),
+    ##     if max(ODEtest)>min(ICtest),
+    ##         error = sprintf('Initial conditions have to be defined\nafter the definition of the ODEs.');
+    ##         return
+    ##     end
+    ## end
+    if ( length(ICtest) != 0 ) {
+        if ( max(ODEtest) > min(ICtest) ) {
+            error = 'Initial conditions have to be defined\nafter the definition of the ODEs.';
+            ## return
+        }
+    }
 
-## if ~isempty(ARtest),
-##     if max(ODEtest)>min(ARtest),
-##         error = sprintf('Algebraic rules have to be defined\nafter the definition of the ODEs.');
-##         return
-##     end
-## end
-## if ~isempty(ARtest) && ~isempty(ICtest),
-##     if max(ARtest)>min(ICtest),
-##         error = sprintf('Initial conditions have to be defined\nafter the definition of the algebraic rules.');
-##         return
-##     end
-## end
+    ## if ~isempty(ARtest),
+    ##     if max(ODEtest)>min(ARtest),
+    ##         error = sprintf('Algebraic rules have to be defined\nafter the definition of the ODEs.');
+    ##         return
+    ##     end
+    ## end
+    ## if ~isempty(ARtest) && ~isempty(ICtest),
+    ##     if max(ARtest)>min(ICtest),
+    ##         error = sprintf('Initial conditions have to be defined\nafter the definition of the algebraic rules.');
+    ##         return
+    ##     end
+    ## end
 
-## % START OF THE ODEs
-## ODEsStart = strfind(states,'d/dt(');
-   ODEsStart = as.numeric( gregexpr( "d\\/dt\\(", states )[[1]] )
-   
-## % START OF THE ALGEBRAIC RULES
-## ARsStart = regexp(states,'\n0')+1;
-##   ARsStart = as.numeric( gregexpr( "\n0", states )[[1]] )
+    ## % START OF THE ODEs
+    ## ODEsStart = strfind(states,'d/dt(');
+    ODEsStart = as.numeric( gregexpr( "d\\/dt\\(", states )[[1]] )
+    
+    ## % START OF THE ALGEBRAIC RULES
+    ## ARsStart = regexp(states,'\n0')+1;
+    ##   ARsStart = as.numeric( gregexpr( "\n0", states )[[1]] )
 
-## % START OF THE INITIAL CONDITIONS
-## % (finding the index of the last '\n' before the '(0)' for each initial condition)
+    ## % START OF THE INITIAL CONDITIONS
+    ## % (finding the index of the last '\n' before the '(0)' for each initial condition)
 
-## initialConditionsStart = [];
-## temp = strfind(states,'(0)');
-## for k = 1:length(temp),
-##     temp2 = double(states(1:temp(k)));
-##     temp3 = find(temp2==10);
-##     initialConditionsStart = [initialConditionsStart temp3(end)+1];
-## end
+    ## initialConditionsStart = [];
+    ## temp = strfind(states,'(0)');
+    ## for k = 1:length(temp),
+    ##     temp2 = double(states(1:temp(k)));
+    ##     temp3 = find(temp2==10);
+    ##     initialConditionsStart = [initialConditionsStart temp3(end)+1];
+    ## end
 ### use this.....
-## ttt <- gregexpr ( "\n\\S*\\(0\\) \\= [0-9]\\.[0-9]*", states , perl = TRUE)[[1]]
-## substring( states, ttt, ttt+attr( ttt, "match.length" ) )
+    ## ttt <- gregexpr ( "\n\\S*\\(0\\) \\= [0-9]\\.[0-9]*", states , perl = TRUE)[[1]]
+    ## substring( states, ttt, ttt+attr( ttt, "match.length" ) )
 
-## %%%%%%%%%%%%%%%%%%%
-## % PROCESS ODEs
-## %%%%%%%%%%%%%%%%%%%
-## stateConstraintInfo = [];
-   stateConstraintInfo = c();
+    ## %%%%%%%%%%%%%%%%%%%
+    ## % PROCESS ODEs
+    ## %%%%%%%%%%%%%%%%%%%
+    ## stateConstraintInfo = [];
+    stateConstraintInfo = c();
 
-## % run through the ODEs and process them
-## if isempty(ARsStart) && isempty(initialConditionsStart),
-##     % if no initial conditions are present then use end of states
-##     % string as end index (+1)
-       ODEsStart = c( ODEsStart, nchar(states)+1 );
-## elseif isempty(ARsStart)
-##     ODEsStart = [ODEsStart initialConditionsStart(1)];
-## else
-##     ODEsStart = [ODEsStart ARsStart(1)];
-## end
-
-
-temp <- gregexpr ( "d\\/dt\\(\\S+\\) \\= .*\n", states , perl = TRUE)[[1]]
-stateString <- substring ( states, temp, temp + attr( temp, "match.length") - 2) # -2 to remove \n at the end
-
-## for k = 1:length(ODEsStart)-1,
-##     stateString = removeCharacters(states(ODEsStart(k):ODEsStart(k+1)-1));
-for ( k in 1:( length( ODEsStart )-1 ) ) {
-    stateString.k <- stateString[ k ]
-
-## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-## % Handle possible constraints on state variables in the IQMmodel
-## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-## % Check if constraint information is present on a state. Syntax: {constraints:[min,max]}
-   stateConstraints = {};
-## infoStartConstraints = strfind(stateString,'{constraints:');
-## if ~isempty(infoStartConstraints),
-##     % find the end of the constraint information
-##     offset = 11; po = 1;
-##     while 1,
-##         if stateString(infoStartConstraints+offset) == '}',
-##             break;
-##         end
-##         offset = offset + 1;
-##     end
-##     constraintsString = stateString(infoStartConstraints:infoStartConstraints+offset);
-##     % remove constraint information from stateString
-##     stateString = stateString([1:infoStartConstraints-1 infoStartConstraints+offset+1:end]);
-##     % parse the constraints string
-##     constraintsString = strrep(constraintsString,' ',''); % remove spaces
-##     constraintsString = constraintsString(15:end-2);
-##     stateConstraints = explodePCIQM(constraintsString,',');
-##     if length(stateConstraints) ~= 2,
-##         error('A state-constraint information seems to be wrongly defined');
-##     end
-##     % convert numeric bounds to numbers
-##     for k2=1:2,
-##         try
-##             temp = eval(stateConstraints{k2});
-##             stateConstraints{k2} = temp;
-##         catch
-##         end
-##     end
-## end
-    
-##     % check if additional information is present ... if yes, cut it out
-##     infoStart = strfind(stateString,'{');
-##     infoEnd = strfind(stateString,'}');
-##     informationText = '';
-##     if length(infoStart) + length(infoEnd) > 2,
-##         error = 'To many curly parentheses in a state definition';
-##         return
-##     end
-##     if length(infoStart) ~= length(infoEnd),
-##         error = 'At least one state information not properly defined';
-##         return
-##     end
-##     if length(infoStart) == 1,
-##         informationText = stateString(infoStart+1:infoEnd-1);
-##         stateString = stateString([1:infoStart-1, infoEnd+1:end]);
-##     end
-##     if ~isempty(informationText),
-##         % explode the information text with ':'
-##         terms = explodePCIQM(informationText,':');
-##         if length(terms) == 1 && ~isempty(strfind(lower(terms{1}),'parameter')),
-##             type = strtrim(terms{1});
-##             compartment = '';
-##             unittype = '';
-##         elseif length(terms) == 2 && ~isempty(strfind(lower(terms{1}),'compartment')),
-##             type = strtrim(terms{1});
-##             compartment = strtrim(terms{2});
-##             unittype = '';
-##         elseif length(terms) == 3 && ~isempty(strfind(lower(terms{1}),'specie')),
-##             type = strtrim(terms{1});
-##             compartment = strtrim(terms{2});
-##             unittype = strtrim(terms{3});
-##         else
-##             error = 'Error in a state information';
-##             return           
-##         end
-##     else 
-         type = '';
-         compartment = '';
-         unittype = '';
-##     end
+    ## % run through the ODEs and process them
+    ## if isempty(ARsStart) && isempty(initialConditionsStart),
+    ##     % if no initial conditions are present then use end of states
+    ##     % string as end index (+1)
+    ODEsStart = c( ODEsStart, nchar(states)+1 );
+    ## elseif isempty(ARsStart)
+    ##     ODEsStart = [ODEsStart initialConditionsStart(1)];
+    ## else
+    ##     ODEsStart = [ODEsStart ARsStart(1)];
+    ## end
 
 
-##     % extract the state name
-##     temp = strfind(stateString,')');
-##     test = stateString(6:temp(1)-1);
-       temp <- regexpr( ")", stateString.k )[[1]]
-       test <- substr( stateString.k, 6, temp - 1 )
+    temp <- gregexpr ( "d\\/dt\\(\\S+\\) \\= .*\n", states , perl = TRUE)[[1]]
+    stateString <- substring ( states, temp, temp + attr( temp, "match.length") - 2) # -2 to remove \n at the end
 
-##     % check if state name given
-##     if isempty(test),
-##         error = sprintf('At least on state name in\nODE definition is not given.');
-##         return
-##     end
-       if( !nzchar( test ) ) {
-       	   error = 'At least on state name in\nODE definition is not given.';
-	   ### return
-       }
+    ## for k = 1:length(ODEsStart)-1,
+    ##     stateString = removeCharacters(states(ODEsStart(k):ODEsStart(k+1)-1));
+    for ( k in 1:( length( ODEsStart )-1 ) ) {
+        stateString.k <- stateString[ k ]
 
-## temp <- unlist( lapply( gregexpr("d\\/dt\\(\\S.*\\)", stateString, perl = TRUE ), function (x) { attr(x, "match.length") } ) )
-## test = substring( stateString, 6, temp-1 )
-
-##     IQMstates(k).name = removeWhiteSpace(test);
-       IQMstates[[ k ]]$name = removeWhiteSpace( test );
-
-##     % extract the state ODE
-##     temp = strfind(stateString,'=');
-##     test = stateString(temp+1:end);
-       temp <- regexpr( "=", stateString.k )[[1]];
-       test <- substr( stateString.k, temp + 1, nchar( stateString.k ) )
-
-##     % check if state ODE given
-##     if isempty(test),
-##         error = sprintf('At least one RHS of an ODE is not given.');
-##         return
-##     end
-       if( !nzchar( test ) ) { # if empty,
-       	   error = 'At least one RHS of an ODE is not given.';
-	   ## return
-       }
-
-##     % The test string contains now the ODE and eventually also a
-##     % comment that should be written into notes.
-##     % check if a comment is present
-##     temp = strfind(test,'%');
-       temp = regexpr( "%", test )[[1]];
-
-##     if ~isempty(temp),
-##         ODE = removeWhiteSpace(test(1:temp(1)-1));
-##         notes = strtrim(test(temp(1)+1:end));
-##     else
-##         ODE = removeWhiteSpace(test);
-##         notes = '';
-##     end
-       if( temp > 0 ) {
-       	   ODE = removeWhiteSpace( substr( test, 1, temp - 1 ) )
-	   notes = substr( test, temp + 1, nchar( stateString.k ) )
-       } else {
-       	   ODE <- removeWhiteSpace( test );
-	   notes = '';
-       }
-
-##     IQMstates(k).ODE = ODE;
-##     IQMstates(k).notes = notes;
-       IQMstates[[ k ]]$ODE = ODE;
-       IQMstates[[ k ]]$notes = notes;
-
-##     % add default value for initial condition
-##     IQMstates(k).initialCondition = 0;
-       IQMstates[[ k ]]$initialCondition = 0;
-
-##     % add information to state
-##     IQMstates(k).type = type;
-##     IQMstates(k).compartment = compartment;
-##     IQMstates(k).unittype = unittype;
-       IQMstates[[ k ]]$type = type;
-       IQMstates[[ k ]]$compartment = compartment;
-       IQMstates[[ k ]]$unittype = unittype;
-    
-## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-## % Handle possible constraints on state variables in the IQMmodel
-## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
-## if ~isempty(stateConstraints),
-##     % ok, state constraints have been defined for this state
-##     % save some information to be able to add it later to the model
-##     stateConstraintInfo(end+1).statename = IQMstates(k).name;
-##     stateConstraintInfo(end).stateindex = k;
-##     stateConstraintInfo(end).lowbound = stateConstraints{1};
-##     stateConstraintInfo(end).highbound = stateConstraints{2};
-##     stateConstraintInfo(end).ODE = IQMstates(k).ODE;
-## end
-
-} ## for loop ends
-## end ## for loop ends here
-
-if ( grepl( "0 \\= ", states ) ) { ## if states do have algebraic
-} else { 
-   IQMalgebraic <- array( list(), 0 )
-}
-
-## %%%%%%%%%%%%%%%%%%%
-## % PROCESS ARs
-## %%%%%%%%%%%%%%%%%%%
-## if isempty(initialConditionsStart),
-##     ARsStart = [ARsStart length(states)+1];
-## else
-##     ARsStart = [ARsStart initialConditionsStart(1)];
-## end
-## for k=1:length(ARsStart)-1,
-##     % get each single AR
-##     ARk = strtrim(states(ARsStart(k):ARsStart(k+1)-1));
-##     % check if additional information is present ... if yes, cut it out
-##     infoStart = strfind(ARk,'{');
-##     infoEnd = strfind(ARk,'}');
-##     informationText = '';
-##     if length(infoStart) + length(infoEnd) > 2,
-##         error = 'To many curly parentheses in an algebraic rule definition';
-##         return
-##     end
-##     if length(infoStart) ~= length(infoEnd),
-##         error = 'At least one algebraic rule not properly defined';
-##         return
-##     end
-##     if length(infoStart) == 1,
-##         informationText = ARk(infoStart+1:infoEnd-1);
-##         ARk = ARk([1:infoStart-1, infoEnd+1:end]);
-##     end
-##     if ~isempty(informationText),
-##         % explode the information text with ':'
-##         terms = explodePCIQM(informationText,':');
-##         if length(terms) == 1 && ~isempty(strfind(lower(terms{1}),'parameter')),
-##             type = strtrim(terms{1});
-##             compartment = '';
-##             unittype = '';
-##         elseif length(terms) == 2 && ~isempty(strfind(lower(terms{1}),'compartment')),
-##             type = strtrim(terms{1});
-##             compartment = strtrim(terms{2});
-##             unittype = '';
-##         elseif length(terms) == 3 && ~isempty(strfind(lower(terms{1}),'specie')),
-##             type = strtrim(terms{1});
-##             compartment = strtrim(terms{2});
-##             unittype = strtrim(terms{3});
-##         else
-##             error = 'Error in an algebraic rule information';
-##             return           
-##         end
-##     else 
-##         type = '';
-##         compartment = '';
-##         unittype = '';
-##     end
-##     % separate comment from AR definition
-##     index1 = strfind(ARk,'=');
-##     index2 = strfind(ARk,'%');
-##     if ~isempty(index2),
-##         ARformulak = strtrim(ARk(index1(1)+1:index2(1)-1));
-##         ARnotek = strtrim(ARk(index2(1)+1:end));
-##     else
-##         ARformulak = strtrim(ARk(index1(1)+1:end));
-##         ARnotek = '';
-##     end        
-##     % split rhs in formula and variable name
-##     terms = explodePCIQM(ARformulak,':');
-##     if length(terms) ~= 2,
-##         ARformulak = terms{1};
-##         ARnamek = ''; % keep it empty
-##         ARick = [];
-##     else
-##         ARformulak = strtrim(terms{1});
-##         ARnamek = strtrim(terms{2});
-##         ARick = 0; % default setting (determined by the integrator)
-##     end
-##     % update structure
-##     IQMalgebraic(k).name = ARnamek;
-##     IQMalgebraic(k).formula = ARformulak;
-##     IQMalgebraic(k).initialCondition = ARick; % default setting (determined by the integrator)
-##     IQMalgebraic(k).type = type;
-##     IQMalgebraic(k).compartment = compartment;
-##     IQMalgebraic(k).unittype = unittype;
-##     IQMalgebraic(k).notes = ARnotek;
-## end
+        ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        ## % Handle possible constraints on state variables in the IQMmodel
+        ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        ## % Check if constraint information is present on a state. Syntax: {constraints:[min,max]}
+        stateConstraints = {};
+        ## infoStartConstraints = strfind(stateString,'{constraints:');
+        ## if ~isempty(infoStartConstraints),
+        ##     % find the end of the constraint information
+        ##     offset = 11; po = 1;
+        ##     while 1,
+        ##         if stateString(infoStartConstraints+offset) == '}',
+        ##             break;
+        ##         end
+        ##         offset = offset + 1;
+        ##     end
+        ##     constraintsString = stateString(infoStartConstraints:infoStartConstraints+offset);
+        ##     % remove constraint information from stateString
+        ##     stateString = stateString([1:infoStartConstraints-1 infoStartConstraints+offset+1:end]);
+        ##     % parse the constraints string
+        ##     constraintsString = strrep(constraintsString,' ',''); % remove spaces
+        ##     constraintsString = constraintsString(15:end-2);
+        ##     stateConstraints = explodePCIQM(constraintsString,',');
+        ##     if length(stateConstraints) ~= 2,
+        ##         error('A state-constraint information seems to be wrongly defined');
+        ##     end
+        ##     % convert numeric bounds to numbers
+        ##     for k2=1:2,
+        ##         try
+        ##             temp = eval(stateConstraints{k2});
+        ##             stateConstraints{k2} = temp;
+        ##         catch
+        ##         end
+        ##     end
+        ## end
+        
+        ##     % check if additional information is present ... if yes, cut it out
+        ##     infoStart = strfind(stateString,'{');
+        ##     infoEnd = strfind(stateString,'}');
+        ##     informationText = '';
+        ##     if length(infoStart) + length(infoEnd) > 2,
+        ##         error = 'To many curly parentheses in a state definition';
+        ##         return
+        ##     end
+        ##     if length(infoStart) ~= length(infoEnd),
+        ##         error = 'At least one state information not properly defined';
+        ##         return
+        ##     end
+        ##     if length(infoStart) == 1,
+        ##         informationText = stateString(infoStart+1:infoEnd-1);
+        ##         stateString = stateString([1:infoStart-1, infoEnd+1:end]);
+        ##     end
+        ##     if ~isempty(informationText),
+        ##         % explode the information text with ':'
+        ##         terms = explodePCIQM(informationText,':');
+        ##         if length(terms) == 1 && ~isempty(strfind(lower(terms{1}),'parameter')),
+        ##             type = strtrim(terms{1});
+        ##             compartment = '';
+        ##             unittype = '';
+        ##         elseif length(terms) == 2 && ~isempty(strfind(lower(terms{1}),'compartment')),
+        ##             type = strtrim(terms{1});
+        ##             compartment = strtrim(terms{2});
+        ##             unittype = '';
+        ##         elseif length(terms) == 3 && ~isempty(strfind(lower(terms{1}),'specie')),
+        ##             type = strtrim(terms{1});
+        ##             compartment = strtrim(terms{2});
+        ##             unittype = strtrim(terms{3});
+        ##         else
+        ##             error = 'Error in a state information';
+        ##             return           
+        ##         end
+        ##     else 
+        type = '';
+        compartment = '';
+        unittype = '';
+        ##     end
 
 
-## %%%%%%%%%%%%%%%%%%%
-## % PROCESS ICs
-## %%%%%%%%%%%%%%%%%%%
-## % run through the initial conditions and add them
-## % they can have a different order than the odes. if an initial
-## % condition is not defined for a certain state then it is set to zero
-## % by default
-## % First check if any initial conditions are given - if not then don't
-## % execute this part!
-## if ~isempty(strfind(states,'(0)')),
-if ( grepl( "\\(0\\)", states ) ) { ## if states do have initial conditions
+        ##     % extract the state name
+        ##     temp = strfind(stateString,')');
+        ##     test = stateString(6:temp(1)-1);
+        temp <- regexpr( ")", stateString.k )[[1]]
+        test <- substr( stateString.k, 6, temp - 1 )
 
-   temp <- gregexpr ( "\n\\S*\\(0\\) \\= [0-9]\\.[0-9]*", states , perl = TRUE)[[1]]
-   ICstring <- substring( states, temp + 1, temp + attr( temp, "match.length" ) - 1 )
+        ##     % check if state name given
+        ##     if isempty(test),
+        ##         error = sprintf('At least on state name in\nODE definition is not given.');
+        ##         return
+        ##     end
+        if( !nzchar( test ) ) {
+            error = 'At least on state name in\nODE definition is not given.';
+### return
+        }
 
-##     initialConditionsStart = [initialConditionsStart length(states)+1];
-       
-##     for k1 = 1:length(initialConditionsStart)-1,
-       for ( k1 in 1:length( ICstring ) ) {
+        ## temp <- unlist( lapply( gregexpr("d\\/dt\\(\\S.*\\)", stateString, perl = TRUE ), function (x) { attr(x, "match.length") } ) )
+        ## test = substring( stateString, 6, temp-1 )
 
-##         ICString = removeWhiteSpace(removeCharacters(states(initialConditionsStart(k1):initialConditionsStart(k1+1)-1)));
-	   ICstring.k <- removeWhiteSpace( removeCharacters( ICstring[ k ] ) )
-	   
-##         % extract the state name
-##         temp = strfind(ICString,'(0)');
-	   temp = regexpr( "\\(0\\)", ICstring.k )[1]
-	   
-##         stateName = ICString(1:temp(1)-1);
-	   stateName <- substr( ICstring.k, 1, temp - 1 )
-	   
-##         % extract the states' initial condition
-##         temp = strfind(ICString,'=');
-	   temp = regexpr( "=", ICstring.k )
-	   
-##         stateIC = ICString(temp+1:end);
-	   stateIC <- substr( ICstring.k, temp + 1, nchar( ICstring.k ) )
-	   
-##         % cycle through the states in the IQMmodel and add the initial
-##         % condition at the correct state
-	   statefound = 0;
+        ##     IQMstates(k).name = removeWhiteSpace(test);
+        IQMstates[[ k ]]$name = removeWhiteSpace( test );
 
-##         for k2 = 1:length(IQMstates),
-##             if strcmp(stateName,IQMstates(k2).name),
-##                 statefound = 1;
-##                 test = str2double(stateIC);
-##                 if isnan(test),
-##                     % initial condition was not a numerical value
-## %                     disp(sprintf('At least one initial condition has a non-numerical value assigned.\nThis might lead to problems with certain toolbox functions.'));
-##                     IQMstates(k2).initialCondition = strtrim(stateIC);
-##                 else
-##                     IQMstates(k2).initialCondition = test;
-##                 end
-##                 break;
-##             end
-##         end
-	   for ( k2 in 1:length( IQMstates ) ) {
-	       if ( stateName == IQMstates[[ k2 ]]$name  ) {
-	       	  statefound = 1;
-		  test = as.numeric( stateIC )
-		  if ( is.na( test ) ) {
-		     error =  'At least one initial condition has a non-numerical value assigned.\nThis might lead to problems with certain toolbox functions.';
-		     IQMstates[[ k2 ]]$initialCondition = 0;
-		  } else {
-		     IQMstates[[ k2 ]]$initialCondition = test;
-		  }
-		break;
-	       }
-	   } ## end of k2 for loop
+        ##     % extract the state ODE
+        ##     temp = strfind(stateString,'=');
+        ##     test = stateString(temp+1:end);
+        temp <- regexpr( "=", stateString.k )[[1]];
+        test <- substr( stateString.k, temp + 1, nchar( stateString.k ) )
+
+        ##     % check if state ODE given
+        ##     if isempty(test),
+        ##         error = sprintf('At least one RHS of an ODE is not given.');
+        ##         return
+        ##     end
+        if( !nzchar( test ) ) { # if empty,
+            error = 'At least one RHS of an ODE is not given.';
+            ## return
+        }
+
+        ##     % The test string contains now the ODE and eventually also a
+        ##     % comment that should be written into notes.
+        ##     % check if a comment is present
+        ##     temp = strfind(test,'%');
+        temp = regexpr( "%", test )[[1]];
+
+        ##     if ~isempty(temp),
+        ##         ODE = removeWhiteSpace(test(1:temp(1)-1));
+        ##         notes = strtrim(test(temp(1)+1:end));
+        ##     else
+        ##         ODE = removeWhiteSpace(test);
+        ##         notes = '';
+        ##     end
+        if( temp > 0 ) {
+            ODE = removeWhiteSpace( substr( test, 1, temp - 1 ) )
+            notes = substr( test, temp + 1, nchar( stateString.k ) )
+        } else {
+            ODE <- removeWhiteSpace( test );
+            notes = '';
+        }
+
+        ##     IQMstates(k).ODE = ODE;
+        ##     IQMstates(k).notes = notes;
+        IQMstates[[ k ]]$ODE = ODE;
+        IQMstates[[ k ]]$notes = notes;
+
+        ##     % add default value for initial condition
+        ##     IQMstates(k).initialCondition = 0;
+        IQMstates[[ k ]]$initialCondition = 0;
+
+        ##     % add information to state
+        ##     IQMstates(k).type = type;
+        ##     IQMstates(k).compartment = compartment;
+        ##     IQMstates(k).unittype = unittype;
+        IQMstates[[ k ]]$type = type;
+        IQMstates[[ k ]]$compartment = compartment;
+        IQMstates[[ k ]]$unittype = unittype;
+        
+        ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        ## % Handle possible constraints on state variables in the IQMmodel
+        ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    
+        ## if ~isempty(stateConstraints),
+        ##     % ok, state constraints have been defined for this state
+        ##     % save some information to be able to add it later to the model
+        ##     stateConstraintInfo(end+1).statename = IQMstates(k).name;
+        ##     stateConstraintInfo(end).stateindex = k;
+        ##     stateConstraintInfo(end).lowbound = stateConstraints{1};
+        ##     stateConstraintInfo(end).highbound = stateConstraints{2};
+        ##     stateConstraintInfo(end).ODE = IQMstates(k).ODE;
+        ## end
+
+    } ## for loop ends
+    ## end ## for loop ends here
+
+    if ( grepl( "0 \\= ", states ) ) { ## if states do have algebraic
+    } else { 
+        IQMalgebraic <- array( list(), 0 )
+    }
+
+    ## %%%%%%%%%%%%%%%%%%%
+    ## % PROCESS ARs
+    ## %%%%%%%%%%%%%%%%%%%
+    ## if isempty(initialConditionsStart),
+    ##     ARsStart = [ARsStart length(states)+1];
+    ## else
+    ##     ARsStart = [ARsStart initialConditionsStart(1)];
+    ## end
+    ## for k=1:length(ARsStart)-1,
+    ##     % get each single AR
+    ##     ARk = strtrim(states(ARsStart(k):ARsStart(k+1)-1));
+    ##     % check if additional information is present ... if yes, cut it out
+    ##     infoStart = strfind(ARk,'{');
+    ##     infoEnd = strfind(ARk,'}');
+    ##     informationText = '';
+    ##     if length(infoStart) + length(infoEnd) > 2,
+    ##         error = 'To many curly parentheses in an algebraic rule definition';
+    ##         return
+    ##     end
+    ##     if length(infoStart) ~= length(infoEnd),
+    ##         error = 'At least one algebraic rule not properly defined';
+    ##         return
+    ##     end
+    ##     if length(infoStart) == 1,
+    ##         informationText = ARk(infoStart+1:infoEnd-1);
+    ##         ARk = ARk([1:infoStart-1, infoEnd+1:end]);
+    ##     end
+    ##     if ~isempty(informationText),
+    ##         % explode the information text with ':'
+    ##         terms = explodePCIQM(informationText,':');
+    ##         if length(terms) == 1 && ~isempty(strfind(lower(terms{1}),'parameter')),
+    ##             type = strtrim(terms{1});
+    ##             compartment = '';
+    ##             unittype = '';
+    ##         elseif length(terms) == 2 && ~isempty(strfind(lower(terms{1}),'compartment')),
+    ##             type = strtrim(terms{1});
+    ##             compartment = strtrim(terms{2});
+    ##             unittype = '';
+    ##         elseif length(terms) == 3 && ~isempty(strfind(lower(terms{1}),'specie')),
+    ##             type = strtrim(terms{1});
+    ##             compartment = strtrim(terms{2});
+    ##             unittype = strtrim(terms{3});
+    ##         else
+    ##             error = 'Error in an algebraic rule information';
+    ##             return           
+    ##         end
+    ##     else 
+    ##         type = '';
+    ##         compartment = '';
+    ##         unittype = '';
+    ##     end
+    ##     % separate comment from AR definition
+    ##     index1 = strfind(ARk,'=');
+    ##     index2 = strfind(ARk,'%');
+    ##     if ~isempty(index2),
+    ##         ARformulak = strtrim(ARk(index1(1)+1:index2(1)-1));
+    ##         ARnotek = strtrim(ARk(index2(1)+1:end));
+    ##     else
+    ##         ARformulak = strtrim(ARk(index1(1)+1:end));
+    ##         ARnotek = '';
+    ##     end        
+    ##     % split rhs in formula and variable name
+    ##     terms = explodePCIQM(ARformulak,':');
+    ##     if length(terms) ~= 2,
+    ##         ARformulak = terms{1};
+    ##         ARnamek = ''; % keep it empty
+    ##         ARick = [];
+    ##     else
+    ##         ARformulak = strtrim(terms{1});
+    ##         ARnamek = strtrim(terms{2});
+    ##         ARick = 0; % default setting (determined by the integrator)
+    ##     end
+    ##     % update structure
+    ##     IQMalgebraic(k).name = ARnamek;
+    ##     IQMalgebraic(k).formula = ARformulak;
+    ##     IQMalgebraic(k).initialCondition = ARick; % default setting (determined by the integrator)
+    ##     IQMalgebraic(k).type = type;
+    ##     IQMalgebraic(k).compartment = compartment;
+    ##     IQMalgebraic(k).unittype = unittype;
+    ##     IQMalgebraic(k).notes = ARnotek;
+    ## end
 
 
-##         % add initial conditions to the algebraic variables if defined
-##         for k2 = 1:length(IQMalgebraic),
-##             if strcmp(stateName,IQMalgebraic(k2).name),
-##                 statefound = 1;
-##                 test = str2double(stateIC);
-##                 if isnan(test),
-##                     % initial condition was not a numerical value
-##                     error = sprintf('At least one initial condition for an algebraic state has a non-numerical value assigned');
-##                     return;
-##                 else
-##                     IQMalgebraic(k2).initialCondition = test;
-##                 end
-##                 break;
-##             end
-##         end ## end of "add initial conditions to the algebraic variables if defined"
+    ## %%%%%%%%%%%%%%%%%%%
+    ## % PROCESS ICs
+    ## %%%%%%%%%%%%%%%%%%%
+    ## % run through the initial conditions and add them
+    ## % they can have a different order than the odes. if an initial
+    ## % condition is not defined for a certain state then it is set to zero
+    ## % by default
+    ## % First check if any initial conditions are given - if not then don't
+    ## % execute this part!
+    ## if ~isempty(strfind(states,'(0)')),
+    if ( grepl( "\\(0\\)", states ) ) { ## if states do have initial conditions
 
-##         if ~statefound,
-##             % check if the state IC stems from an array definition
-##             if isempty(strfind(stateName,'<')),
-##                 % no it doesn't
-##                 error = sprintf('At least one initial condition given\nfor a statename that does not appear\nin the ODE definitions.');
-##                 return;
-##             else
-##                 % yes it does! so don't output an error but do something
-##                 % different. I will for now pass the IC information for
-##                 % array states using a global variable. Not nice but it
-##                 % should do the trick.
-##                 arrayInitialConditions_qayxsw(end+1).name = stateName;
-##                 arrayInitialConditions_qayxsw(end).ic = stateIC;
-##             end
-##         else
-##             % state could have been found but it still is an array thing
-##             % check it here
-##             if ~isempty(strfind(stateName,'<')),
-##                 arrayInitialConditions_qayxsw(end+1).name = stateName;
-##                 arrayInitialConditions_qayxsw(end).ic = stateIC;    
-##             end
-##         end
+        temp <- gregexpr ( "\n\\S*\\(0\\) \\= [0-9]\\.[0-9]*", states , perl = TRUE)[[1]]
+        ICstring <- substring( states, temp + 1, temp + attr( temp, "match.length" ) - 1 )
 
-##     end # end for loop
-       } # end for loop
-## end ## end if
-} ## end of process initial conditions
+        ##     initialConditionsStart = [initialConditionsStart length(states)+1];
+        
+        ##     for k1 = 1:length(initialConditionsStart)-1,
+        for ( k1 in 1:length( ICstring ) ) {
 
-## return( list( states, algebraic, stateConstraintInfo, errorStates ) )
-   return( list( states = IQMstates ) )
+            ##         ICString = removeWhiteSpace(removeCharacters(states(initialConditionsStart(k1):initialConditionsStart(k1+1)-1)));
+            ICstring.k <- removeWhiteSpace( removeCharacters( ICstring[ k ] ) )
+            
+            ##         % extract the state name
+            ##         temp = strfind(ICString,'(0)');
+            temp = regexpr( "\\(0\\)", ICstring.k )[1]
+            
+            ##         stateName = ICString(1:temp(1)-1);
+            stateName <- substr( ICstring.k, 1, temp - 1 )
+            
+            ##         % extract the states' initial condition
+            ##         temp = strfind(ICString,'=');
+            temp = regexpr( "=", ICstring.k )
+            
+            ##         stateIC = ICString(temp+1:end);
+            stateIC <- substr( ICstring.k, temp + 1, nchar( ICstring.k ) )
+            
+            ##         % cycle through the states in the IQMmodel and add the initial
+            ##         % condition at the correct state
+            statefound = 0;
+
+            ##         for k2 = 1:length(IQMstates),
+            ##             if strcmp(stateName,IQMstates(k2).name),
+            ##                 statefound = 1;
+            ##                 test = str2double(stateIC);
+            ##                 if isnan(test),
+            ##                     % initial condition was not a numerical value
+            ## %                     disp(sprintf('At least one initial condition has a non-numerical value assigned.\nThis might lead to problems with certain toolbox functions.'));
+            ##                     IQMstates(k2).initialCondition = strtrim(stateIC);
+            ##                 else
+            ##                     IQMstates(k2).initialCondition = test;
+            ##                 end
+            ##                 break;
+            ##             end
+            ##         end
+            for ( k2 in 1:length( IQMstates ) ) {
+                if ( stateName == IQMstates[[ k2 ]]$name  ) {
+                    statefound = 1;
+                    test = as.numeric( stateIC )
+                    if ( is.na( test ) ) {
+                        error =  'At least one initial condition has a non-numerical value assigned.\nThis might lead to problems with certain toolbox functions.';
+                        IQMstates[[ k2 ]]$initialCondition = 0;
+                    } else {
+                        IQMstates[[ k2 ]]$initialCondition = test;
+                    }
+                    break;
+                }
+            } ## end of k2 for loop
+
+
+            ##         % add initial conditions to the algebraic variables if defined
+            ##         for k2 = 1:length(IQMalgebraic),
+            ##             if strcmp(stateName,IQMalgebraic(k2).name),
+            ##                 statefound = 1;
+            ##                 test = str2double(stateIC);
+            ##                 if isnan(test),
+            ##                     % initial condition was not a numerical value
+            ##                     error = sprintf('At least one initial condition for an algebraic state has a non-numerical value assigned');
+            ##                     return;
+            ##                 else
+            ##                     IQMalgebraic(k2).initialCondition = test;
+            ##                 end
+            ##                 break;
+            ##             end
+            ##         end ## end of "add initial conditions to the algebraic variables if defined"
+
+            ##         if ~statefound,
+            ##             % check if the state IC stems from an array definition
+            ##             if isempty(strfind(stateName,'<')),
+            ##                 % no it doesn't
+            ##                 error = sprintf('At least one initial condition given\nfor a statename that does not appear\nin the ODE definitions.');
+            ##                 return;
+            ##             else
+            ##                 % yes it does! so don't output an error but do something
+            ##                 % different. I will for now pass the IC information for
+            ##                 % array states using a global variable. Not nice but it
+            ##                 % should do the trick.
+            ##                 arrayInitialConditions_qayxsw(end+1).name = stateName;
+            ##                 arrayInitialConditions_qayxsw(end).ic = stateIC;
+            ##             end
+            ##         else
+            ##             % state could have been found but it still is an array thing
+            ##             % check it here
+            ##             if ~isempty(strfind(stateName,'<')),
+            ##                 arrayInitialConditions_qayxsw(end+1).name = stateName;
+            ##                 arrayInitialConditions_qayxsw(end).ic = stateIC;    
+            ##             end
+            ##         end
+
+            ##     end # end for loop
+        } # end for loop
+        ## end ## end if
+    } ## end of process initial conditions
+
+    ## return( list( states, algebraic, stateConstraintInfo, errorStates ) )
+    return( list( states = IQMstates ) )
 
 ### how to receive and use IQMstates
-##   r <- getStates( states ) # this returns states, algebraic, stateConstraintInfo and errorStates
-##   IQMstates <- r$states 
+    ##   r <- getStates( states ) # this returns states, algebraic, stateConstraintInfo and errorStates
+    ##   IQMstates <- r$states 
 
 } # end of function getStates
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## function [IQMparameters, error] = getParameters(parameters)
 getParameters <- function (parameters) {
-   error = '';
+    error = '';
 
-## %    parameters = removeWhiteSpace(parameters);
-## IQMparameters = struct('name',{},'value',{},'type',{},'compartment',{},'unittype',{},'notes',{});
+    ## %    parameters = removeWhiteSpace(parameters);
+    ## IQMparameters = struct('name',{},'value',{},'type',{},'compartment',{},'unittype',{},'notes',{});
 
-## % get the starting indices for the parameters by finding the index
-## % of the last '\n' before the '=' for each parameter
-## parametersStart = regexp([10 parameters],['\n[^\n=]*=']);
-   parametersStart = as.numeric( gregexpr( "\n*\\=", parameters )[[1]] );
+    ## % get the starting indices for the parameters by finding the index
+    ## % of the last '\n' before the '=' for each parameter
+    ## parametersStart = regexp([10 parameters],['\n[^\n=]*=']);
+    if ( grepl( "\n*\\=", parameters ) {
 
-## % run through the parameters and process them (+1 since endindex = end-1)
-## parametersStart = [parametersStart length(parameters)+1];
-## parNAN = 0;
-## for k = 1:length(parametersStart)-1,
-##     parameterString = removeCharacters(parameters(parametersStart(k):parametersStart(k+1)-1));
-##     % check if additional information is present ... if yes, cut it out
-##     infoStart = strfind(parameterString,'{');
-##     infoEnd = strfind(parameterString,'}');
-##     informationText = '';
-##     if length(infoStart) + length(infoEnd) > 2,
-##         error = 'To many curly parentheses in a parameter definition';
-##         return
-##     end
-##     if length(infoStart) ~= length(infoEnd),
-##         error = 'At least one parameter information not properly defined';
-##         return
-##     end
-##     if length(infoStart) == 1,
-##         informationText = parameterString(infoStart+1:infoEnd-1);
-##         parameterString = parameterString([1:infoStart-1, infoEnd+1:end]);
-##     end
-##     if ~isempty(informationText),
-##         % explode the information text with ':'
-##         terms = explodePCIQM(informationText,':');
-##         if length(terms) == 1 && ~isempty(strfind(lower(terms{1}),'parameter')),
-##             type = strtrim(terms{1});
-##             compartment = '';
-##             unittype = '';
-##         elseif length(terms) == 2 && ~isempty(strfind(lower(terms{1}),'compartment')),
-##             type = strtrim(terms{1});
-##             compartment = strtrim(terms{2});
-##             unittype = '';
-##         elseif length(terms) == 3 && ~isempty(strfind(lower(terms{1}),'specie')),
-##             type = strtrim(terms{1});
-##             compartment = strtrim(terms{2});
-##             unittype = strtrim(terms{3});
-##         else
-##             error = 'Error in a parameter information';
-##             return           
-##         end
-##     else 
-##         type = '';
-##         compartment = '';
-##         unittype = '';
-##     end
-##     % extract the parameter name
-##     temp = strfind(parameterString,'=');
-##     test = parameterString(1:temp(1)-1);
-##     % check if parameter name given
-##     if isempty(test),
-##         error = sprintf('At least one parameter name not given.');
-##         return
-##     end
-##     IQMparameters(k).name = removeWhiteSpace(test);
-##     % extract the parameter value
-##     % check if it has a numerical value
-##     test = parameterString(temp+1:end);
-##     % The test string contains now the parameter value and eventually also a
-##     % comment that should be written into notes.
-##     % check if a comment is present
-##     temp = strfind(test,'%');
-##     if ~isempty(temp),
-##         value = str2double(removeWhiteSpace(test(1:temp(1)-1)));
-##         notes = strtrim(test(temp(1)+1:end));
-##     else
-##         value = str2double(removeWhiteSpace(test));
-##         notes = '';
-##     end
-##     if isnan(value),
-##         % initial condition was not a numerical value
-##         parNAN = 1;
-##     else
-##         IQMparameters(k).value = value;
-##     end
-##     % add default notes to parameter
-##     IQMparameters(k).notes = notes;
-##     % add information to parameter
-##     IQMparameters(k).type = type;
-##     IQMparameters(k).compartment = compartment;
-##     IQMparameters(k).unittype = unittype;
-## end
-## if parNAN,
-##     error = sprintf('At least one parameter has a\nnon-numerical value assigned');
-## end
-## return
-} ## end of getParameters
+        parametersStart = as.numeric( gregexpr( "\n*\\=", parameters )[[1]] );
+        IQMparameters <- array( list(), length( parametersStart ) )
+
+        ## % run through the parameters and process them (+1 since endindex = end-1)
+        ## parametersStart = [parametersStart length(parameters)+1];
+        parametersStart = c( parametersStart, nchar( parameters ) + 1 )
+        
+        ## parNAN = 0;
+        parNAN = 0
+        ## for k = 1:length(parametersStart)-1,
+        for( k in 1:( length( parametersStart ) - 1 ) ) {
+            ##     parameterString = removeCharacters(parameters(parametersStart(k):parametersStart(k+1)-1));
+            parameterString <- removeCharacters( substr( parameters, parametersStart[ k ], parametersStart[ k + 1 ] - 1 ) )
+
+            
+            ##     % check if additional information is present ... if yes, cut it out
+            ##     infoStart = strfind(parameterString,'{');
+            ##     infoEnd = strfind(parameterString,'}');
+            informationText = '';
+            ##     if length(infoStart) + length(infoEnd) > 2,
+            ##         error = 'To many curly parentheses in a parameter definition';
+            ##         return
+            ##     end
+            ##     if length(infoStart) ~= length(infoEnd),
+            ##         error = 'At least one parameter information not properly defined';
+            ##         return
+            ##     end
+            ##     if length(infoStart) == 1,
+            ##         informationText = parameterString(infoStart+1:infoEnd-1);
+            ##         parameterString = parameterString([1:infoStart-1, infoEnd+1:end]);
+            ##     end
+            ##     if ~isempty(informationText),
+            ##         % explode the information text with ':'
+            ##         terms = explodePCIQM(informationText,':');
+            ##         if length(terms) == 1 && ~isempty(strfind(lower(terms{1}),'parameter')),
+            ##             type = strtrim(terms{1});
+            ##             compartment = '';
+            ##             unittype = '';
+            ##         elseif length(terms) == 2 && ~isempty(strfind(lower(terms{1}),'compartment')),
+            ##             type = strtrim(terms{1});
+            ##             compartment = strtrim(terms{2});
+            ##             unittype = '';
+            ##         elseif length(terms) == 3 && ~isempty(strfind(lower(terms{1}),'specie')),
+            ##             type = strtrim(terms{1});
+            ##             compartment = strtrim(terms{2});
+            ##             unittype = strtrim(terms{3});
+            ##         else
+            ##             error = 'Error in a parameter information';
+            ##             return           
+            ##         end
+            ##     else 
+            type = '';
+            compartment = '';
+            unittype = '';
+            ##     end
+
+            ##     % extract the parameter name
+            ##     temp = strfind(parameterString,'=');
+            temp <- regexpr( "=", parameterString )[1]
+            ##     test = parameterString(1:temp(1)-1);
+            test <- substr( parameterString, 1, temp - 1 )
+
+            ##     % check if parameter name given
+            ##     if isempty(test),
+            ##         error = sprintf('At least one parameter name not given.');
+            ##         return
+            ##     end
+            if ( !nzchar( test ) ) {
+                error = 'At least one parameter name not given.';
+                ## return
+            }
+
+            ##     IQMparameters(k).name = removeWhiteSpace(test);
+            IQMparamets[[ k ]]$name <- removeWhiteSpace( test )
+            
+            ##     % extract the parameter value
+            ##     % check if it has a numerical value
+            ##     test = parameterString(temp+1:end);
+            test <- substr( parameterString, temp + 1, nchar( parameterString ) )
+
+            ##     % The test string contains now the parameter value and eventually also a
+            ##     % comment that should be written into notes.
+            ##     % check if a comment is present
+            ##     temp = strfind(test,'%');
+            temp = regexpr( "%", test )[1]
+            
+            ##     if ~isempty(temp),
+            ##         value = str2double(removeWhiteSpace(test(1:temp(1)-1)));
+            ##         notes = strtrim(test(temp(1)+1:end));
+            ##     else
+            ##         value = str2double(removeWhiteSpace(test));
+            ##         notes = '';
+            ##     end
+            if ( temp > 0 ) {
+                value = as.numeric( removeWhiteSpace( substr( test, 1, temp - 1 ) ) )
+                notes = substr( test, temp + 1, nchar( parameterString ) )
+            } else {
+                value = as.numeric( removewhiteSpace( test ) )
+                notes = ""
+            }
+
+
+            ##     if isnan(value),
+            ##         % initial condition was not a numerical value
+            ##         parNAN = 1;
+            ##     else
+            ##         IQMparameters(k).value = value;
+            ##     end
+            if ( is.na( value ) ) {
+                parNAN = 1;
+            } else {
+                IQMparameters[[ k ]]$value = value;
+            }
+            
+            ##     % add default notes to parameter
+            ##     IQMparameters(k).notes = notes;
+            IQMparameters[[ k ]]$notes = notes
+            
+            ##     % add information to parameter
+            ##     IQMparameters(k).type = type;
+            ##     IQMparameters(k).compartment = compartment;
+            ##     IQMparameters(k).unittype = unittype;
+            IQMparameters[[ k ]]$type = type
+            IQMparameters[[ k ]]$compartment = compartment
+            IQMparameters[[ k ]]$unittype = unittype
+            ## end
+        } # end of for loop
+        
+        ## if parNAN,
+        ##     error = sprintf('At least one parameter has a\nnon-numerical value assigned');
+        ## end
+        if ( parNAN == 1 ) {
+            error = 'At least one parameter has a\nnon-numerical value assigned';
+        }
+
+    } else {
+        IQMparameters <- array( list(), 0 )
+    }
+
+        return ( list( IQMparameters = IQMparameters, error = error ) )
+
+        ## return
+ } ## end of getParameters
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## function [IQMvariables, error] = getVariables(variables)
