@@ -62,47 +62,51 @@ if ( nargin == 0 )
 
 if ( nargin > 0 ) {
 
-###     if strcmp('IQMmodel',class(varargin{1})),
-###         inputType = 'IQMmodel';
-###         iqmInput = varargin{1};
-	if ( isIQMmodel( model ) ) {
-	     inputType = 'IQMmodel';
-	     iqmInput = model;	   
-	}	
+### ###     if strcmp('IQMmodel',class(varargin{1})),
+### ###         inputType = 'IQMmodel';
+### ###         iqmInput = varargin{1};
+### 	if ( isIQMmodel( model ) ) {
+### 	     inputType = 'IQMmodel';
+### 	     iqmInput = model;	   
+### 	}	
 
-###     elseif isstruct(varargin{1}),
-###         inputType = 'IQMstructure';
-###         IQMstructure = varargin{1};
-	else if ( is.list( model ) ) {
-	    inputType = 'IQMstructure';
-            IQMstructure = model;
-	}
+### ###     elseif isstruct(varargin{1}),
+### ###         inputType = 'IQMstructure';
+### ###         IQMstructure = varargin{1};
+### 	else if ( is.list( model ) ) {
+### 	    inputType = 'IQMstructure';
+###             IQMstructure = model;
+### 	}
 
-###     elseif ischar(varargin{1}){
-###         #% check if '.txt' or '.txtbc' given as extension. If yes, then import text
-###         #% model, otherwise assume an SBML model is to be imported.
-###         filename = varargin{1};
-###         if ~isempty(strfind(filename,'.txtbc')),
-###             inputType = 'TextBCModelFile';
-###         elseif ~isempty(strfind(filename,'.txt')),
-###             inputType = 'TextModelFile';
-###         else
-###             inputType = 'SBMLmodelFile';
-###         end
-	 else if ( is.character( model ) ) {
-	      filename <- model
-	      if ( grepl( "*.txtbc$", filename ) ) {
-	             inputType = 'TextBCModelFile';
-	      } else if ( grepl( "*.txt$", filename ) ) {
-	             inputType = 'TextModelFile';
-	      } else {
-	      	     inputType = 'SBMLmodelFile';
-	      }
-	 }
+### ###     elseif ischar(varargin{1}){
+### ###         #% check if '.txt' or '.txtbc' given as extension. If yes, then import text
+### ###         #% model, otherwise assume an SBML model is to be imported.
+### ###         filename = varargin{1};
+### ###         if ~isempty(strfind(filename,'.txtbc')),
+### ###             inputType = 'TextBCModelFile';
+### ###         elseif ~isempty(strfind(filename,'.txt')),
+### ###             inputType = 'TextModelFile';
+### ###         else
+### ###             inputType = 'SBMLmodelFile';
+### ###         end
+###     	 else if ( is.character( model ) ) {
+  	 if ( is.character( model ) ) {
+ 	      filename <- model
+ 	      if ( grepl( "*.txtbc$", filename ) ) {
+ 	             inputType = 'TextBCModelFile';
+ 	      } else if ( grepl( "*.txt$", filename ) ) {
+ 	             inputType = 'TextModelFile';
+ 	      } else {
+ 	      	     inputType = 'SBMLmodelFile';
+ 	      }
 
-     else 
+}
+
+else 
          stop('Input argument of unknown type');
 }
+
+## print ( inputType )
 
 
 #% model.inputs.name:       input name
@@ -121,136 +125,139 @@ if ( nargin > 0 ) {
 #% model.outputs.varindex:  index of output in model variables
 
 
-#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%
-#% CONSTRUCT THE IQMMODEL OBJECT 
-#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%
-if ( inputType == 'empty' ) {
-    #% Create empty IQMstructure
-    #% inputs substructure
-#    inputsStruct = struct('name',{},'factors',{},'terms',{},'stateindex',{},'parindex',{});
-    inputsStruct = list(
-			name = c(),
-			factors = c(),
-			terms = c(),
-			stateindex = c(),
-			parindex = c()
-			);
-	## str( inputsStruct )
-    ### #% outputs substructure
-    ### outputsStruct = struct('name',{},'formula',{},'notes',{},'varindex',{});
-    outputsStruct = list(
-			name = c(),
-			formula = c(),
-			notes = c(),
-			varindex = c()
-			);
-    ### #% functions substructure
-    ### functionsStruct = struct('name',{},'arguments',{},'formula',{},'notes',{});
-    functionsStruct = list(
-			name = c(),
-			arguments = c(),
-			formula = c(),
-			notes =c()
-			);
-    ### #% states substructure
-    ### statesStruct = struct('name',{},'initialCondition',{},'ODE',{},'type',{},'compartment',{},'unittype',{},'notes',{});
-    statesStruct = list(
-			name = c(),
-			initialCondition = c(),
-			ODE = c(),
-			type = c(),
-			compartment = c(),
-			unittype = c(),
-			notes = c()
-			);
-    ### #% algebraic substructure
-    ### algebraicStruct = struct('name',{},'formula',{},'initialCondition',{},'type',{},'compartment',{},'unittype',{},'notes',{});
-    algebraicStruct = list(
-			name = c(),
-			formula = c(),
-			initialCondition =c(),
-			type = c(),
-			compartment = c(),
-			unittype = c(),
-			notes = c()
-			);
-    ### #% parameters substructure
-    ### parametersStruct = struct('name',{},'value',{},'type',{},'compartment',{},'unittype',{},'notes',{});
-    parametersStruct = list(
-			name = c(),
-			value = c(),
-			type = c(),
-			compartment = c(),
-			unittype = c(),
-			notes =c()
-			);
-    ### #% variables substructure
-    ### variablesStruct = struct('name',{},'formula',{},'type',{},'compartment',{},'unittype',{},'notes',{});
-    variablesStruct = list(
-			name = c(),
-			formula = c(),
-			type = c(),
-			compartment = c(),
-			unittype = c(),
-			notes = c()
-			);
-    ### #% reactions substructure
-    ### reactionsStruct = struct('name',{},'formula',{},'notes',{},'reversible',{},'fast',{});
-    reactionsStruct = list(
-			name = c(),
-			formula = c(),
-			notes = c(),
-			reversible = c(),
-			fast =c()
-			);
-    ### #% event assignment substructure
-    ### eventassignmentStruct = struct('variable',{},'formula',{});
-    eventassignmentStruct = list(
-    			  variable = c(),
-			  formula = c()
-			  );
-    ### #% event substructure
-    ### eventStruct = struct('name',{},'trigger',{},'assignment',eventassignmentStruct,'notes',{});
-    eventStruct = list(
-			name = c(),
-			trigger = c(),
-			assignment = eventassignmentStruct,
-			notes = c()
-			);
-    ### #% Create IQMstr
-    ### IQMstructure = struct('name','unnamed_model','notes','','functions',functionsStruct,'states',statesStruct,'algebraic',algebraicStruct,'parameters',parametersStruct,'variables',variablesStruct,'reactions',reactionsStruct,'events',eventStruct,'functionsMATLAB','','inputs',inputsStruct,'outputs',outputsStruct);
-    IQMstructure = list(
-    		 name = c("unnamed_model"),
-		 notes = c(),
-		 functions = functionsStruct,
-		 states = statesStruct,
-		 algebraic = algebraicStruct,
-		 parameters = parametersStruct,
-		 variables = variablesStruct,
-		 reactions = reactionsStruct,
-		 events = eventStruct,
-		 functionsMATLAB = c(),
-		 inputs = inputsStruct,
-		 outputs = outputsStruct);
+ #%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%
+ #% CONSTRUCT THE IQMMODEL OBJECT 
+ #%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%#%
+ if ( inputType == 'empty' ) {
+     #% Create empty IQMstructure
+     #% inputs substructure
+ #    inputsStruct = struct('name',{},'factors',{},'terms',{},'stateindex',{},'parindex',{});
+     inputsStruct = list(
+ 			name = c(),
+ 			factors = c(),
+ 			terms = c(),
+ 			stateindex = c(),
+ 			parindex = c()
+ 			);
+ 	## str( inputsStruct )
+     ### #% outputs substructure
+     ### outputsStruct = struct('name',{},'formula',{},'notes',{},'varindex',{});
+     outputsStruct = list(
+ 			name = c(),
+ 			formula = c(),
+ 			notes = c(),
+ 			varindex = c()
+ 			);
+     ### #% functions substructure
+     ### functionsStruct = struct('name',{},'arguments',{},'formula',{},'notes',{});
+     functionsStruct = list(
+ 			name = c(),
+ 			arguments = c(),
+ 			formula = c(),
+ 			notes =c()
+ 			);
+     ### #% states substructure
+     ### statesStruct = struct('name',{},'initialCondition',{},'ODE',{},'type',{},'compartment',{},'unittype',{},'notes',{});
+     statesStruct = list(
+ 			name = c(),
+ 			initialCondition = c(),
+ 			ODE = c(),
+ 			type = c(),
+ 			compartment = c(),
+ 			unittype = c(),
+ 			notes = c()
+ 			);
+     ### #% algebraic substructure
+     ### algebraicStruct = struct('name',{},'formula',{},'initialCondition',{},'type',{},'compartment',{},'unittype',{},'notes',{});
+     algebraicStruct = list(
+ 			name = c(),
+ 			formula = c(),
+ 			initialCondition =c(),
+ 			type = c(),
+ 			compartment = c(),
+ 			unittype = c(),
+ 			notes = c()
+ 			);
+     ### #% parameters substructure
+     ### parametersStruct = struct('name',{},'value',{},'type',{},'compartment',{},'unittype',{},'notes',{});
+     parametersStruct = list(
+ 			name = c(),
+ 			value = c(),
+ 			type = c(),
+ 			compartment = c(),
+ 			unittype = c(),
+ 			notes =c()
+ 			);
+     ### #% variables substructure
+     ### variablesStruct = struct('name',{},'formula',{},'type',{},'compartment',{},'unittype',{},'notes',{});
+     variablesStruct = list(
+ 			name = c(),
+ 			formula = c(),
+ 			type = c(),
+ 			compartment = c(),
+ 			unittype = c(),
+ 			notes = c()
+ 			);
+     ### #% reactions substructure
+     ### reactionsStruct = struct('name',{},'formula',{},'notes',{},'reversible',{},'fast',{});
+     reactionsStruct = list(
+ 			name = c(),
+ 			formula = c(),
+ 			notes = c(),
+ 			reversible = c(),
+ 			fast =c()
+ 			);
+     ### #% event assignment substructure
+     ### eventassignmentStruct = struct('variable',{},'formula',{});
+     eventassignmentStruct = list(
+     			  variable = c(),
+ 			  formula = c()
+ 			  );
+     ### #% event substructure
+     ### eventStruct = struct('name',{},'trigger',{},'assignment',eventassignmentStruct,'notes',{});
+     eventStruct = list(
+ 			name = c(),
+ 			trigger = c(),
+ 			assignment = eventassignmentStruct,
+ 			notes = c()
+ 			);
+     ### #% Create IQMstr
+     ### IQMstructure = struct('name','unnamed_model','notes','','functions',functionsStruct,'states',statesStruct,'algebraic',algebraicStruct,'parameters',parametersStruct,'variables',variablesStruct,'reactions',reactionsStruct,'events',eventStruct,'functionsMATLAB','','inputs',inputsStruct,'outputs',outputsStruct);
+     IQMstructure = list(
+     		 name = c("unnamed_model"),
+ 		 notes = c(),
+ 		 functions = functionsStruct,
+ 		 states = statesStruct,
+ 		 algebraic = algebraicStruct,
+ 		 parameters = parametersStruct,
+ 		 variables = variablesStruct,
+ 		 reactions = reactionsStruct,
+ 		 events = eventStruct,
+ 		 functionsMATLAB = c(),
+ 		 inputs = inputsStruct,
+ 		 outputs = outputsStruct);
 
-	## str( IQMstructure )
+ 	## str( IQMstructure )
 
-	### #% construct the model object
-	### model = class(IQMstructure,'IQMmodel');
-	print ( class( IQMstructure ) )
-	class( IQMstructure ) <- append( class( IQMstructure ), "IQMmodel" )
-	print ( class( IQMstructure ) )
+ 	### #% construct the model object
+ 	### model = class(IQMstructure,'IQMmodel');
+ 	###print ( class( IQMstructure ) )
+ 	class( IQMstructure ) <- append( class( IQMstructure ), "IQMmodel" )
+	### 	print ( class( IQMstructure ) )
 
-	model <- IQMstructure
-    } ### end of if ( inputType == 'empty' ) {
+ 	model <- IQMstructure
+	return( model )
+	}
 
-### elseif strcmp('IQMmodel',inputType),
-###     % copy the model object
-    else if ( inputType == "IQMmodel" ) {
-        model <- iqmInput;
-    } ### end of     else if ( inputType == "IQMmodel" ) {
+###     } ### end of if ( inputType == 'empty' ) {
 
-### HPtodo IQMstructure
+### ### elseif strcmp('IQMmodel',inputType),
+### ###     % copy the model object
+###     else if ( inputType == "IQMmodel" ) {
+###         model <- iqmInput;
+###     } ### end of     else if ( inputType == "IQMmodel" ) {
+
+### ### HPtodo IQMstructure
 
 
 ### elseif strcmp('TextModelFile',inputType),
@@ -261,6 +268,7 @@ if ( inputType == 'empty' ) {
 ###         errorMsg = sprintf('TEXT model, "%s", does not exist.', filename);
 ###         error(errorMsg);
 ###     end
+
 ###     % If file exists then first load it
 ###     modelText = fileread(filename);  
 ###     % then convert it to IQMstructure
@@ -274,12 +282,18 @@ if ( inputType == 'empty' ) {
 ###     % construct the model object
 ###     model = class(IQMstructure,'IQMmodel');
 
-    else if ( inputType == "TextModelFile" ) {
+     else if ( inputType == "TextModelFile" ) {
+      # if ( inputType == "TextModelFile" ) {
     	 if( !file.exists( filename ) ) {
 	     stop( paste( "TEXT model ", filename, " does not exist." , sep = "" ) )
     	 }
 	 modelText <- readChar( filename, file.info(filename)$size )
-	 
+
+	 r <- convertTextToModelIQM( modelText )
+    	 model <- r$IQMmodel
+
+         return( model )
     }
+
 
 } # end of main function

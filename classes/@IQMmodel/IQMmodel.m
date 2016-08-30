@@ -219,8 +219,8 @@ elseif strcmp('TextModelFile',inputType),
     % then convert it to IQMstructure
     [IQMstructure, errorMsg] = convertTextToModelIQM(modelText);
 
-disp('Im here')
-disp( IQMstructure )
+% disp('Im here')
+% disp( IQMstructure )
 
     % Check if error occurred while importing the SBML model
     if ~isempty(errorMsg),

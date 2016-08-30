@@ -217,18 +217,18 @@ ARsStart = regexp(states,'\n0')+1;
 initialConditionsStart = [];
 temp = strfind(states,'(0)');
 
-disp( 'temp' );
-disp( temp );
+%disp( 'temp' );
+%disp( temp );
 
 for k = 1:length(temp),
     temp2 = double(states(1:temp(k)));
-disp ( k );
+%disp ( k );
 %disp( 'temp2 ' );
 %disp( temp2 );
     temp3 = find(temp2==10);
 %disp( temp3);
     initialConditionsStart = [initialConditionsStart temp3(end)+1];
-disp( initialConditionsStart );
+%disp( initialConditionsStart );
 end
 
 %%%%%%%%%%%%%%%%%%%

@@ -27,13 +27,13 @@ modelTextStructure = getPartsFromCompleteTextIQM(modelText);
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## %%%%%%%%%%%%%%%%%% Name
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-my.IQMmodel.name = removeCharacters(modelTextStructure.name);
+my.IQMmodel$name = removeCharacters(modelTextStructure$name);
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## %%%%%%%%%%%%%%%%%% Notes
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## my.IQMmodel.notes = strtrim(modelTextStructure.notes);
-my.IQMmodel.notes = gsub( "^\\s+|\\s+$", "", modelTextStructure.notes )
+my.IQMmodel$notes = gsub( "^\\s+|\\s+$", "", modelTextStructure$notes )
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## %%%%%%%%%%%%%%%%%% Functions
@@ -52,6 +52,10 @@ my.IQMmodel.notes = gsub( "^\\s+|\\s+$", "", modelTextStructure.notes )
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## try
 ##     [my.IQMmodel.states, my.IQMmodel.algebraic, stateConstraintInfo, errorStates] = getStates(modelTextStructure.states);
+
+       r <- getStates( modelTextStructure$states )
+       my.IQMmodel$states <- r$IQMstates
+       
 ## catch
 ##     errorMsg = sprintf('%sPlease check the syntax of the ''ODE'' and\n''initial condition'' definitions.\n',errorMsg);
 ## end
@@ -64,6 +68,10 @@ my.IQMmodel.notes = gsub( "^\\s+|\\s+$", "", modelTextStructure.notes )
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## try
 ##     [my.IQMmodel.parameters, errorParameters] = getParameters(modelTextStructure.parameters);
+       r <- getParameters( modelTextStructure$parameters )
+       my.IQMmodel$parameters <- r$IQMparameters
+       errorParameters <- r$error
+
 ## catch
 ##     errorMsg = sprintf('%sPlease check the syntax of the ''Parameter'' definitions.\n',errorMsg);
 ## end
@@ -76,6 +84,10 @@ my.IQMmodel.notes = gsub( "^\\s+|\\s+$", "", modelTextStructure.notes )
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## try
 ##     [my.IQMmodel.variables, errorVariables] = getVariables(modelTextStructure.variables);
+       r <- getVariables( modelTextStructure$variables )
+       my.IQMmodel$variables <- r$IQMvariables
+       errorVariables <- r$error
+
 ## catch
 ##     errorMsg = sprintf('%sPlease check the syntax of the ''Variables'' definitions.\n',errorMsg);
 ## end
@@ -88,6 +100,10 @@ my.IQMmodel.notes = gsub( "^\\s+|\\s+$", "", modelTextStructure.notes )
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## try
 ##     [my.IQMmodel.reactions, errorReactions] = getReactions(modelTextStructure.reactions);
+       r <- getReactions( modelTextStructure$reactions )
+       my.IQMmodel$reactions <- r$IQMreactions
+       errorReactiions <- r$error
+
 ## catch
 ##     errorMsg = sprintf('%sPlease check the syntax of the ''Reactions'' definitions.\n',errorMsg);
 ## end
@@ -154,7 +170,7 @@ my.IQMmodel.notes = gsub( "^\\s+|\\s+$", "", modelTextStructure.notes )
 ##     my.IQMmodel.reactions(end).fast = 0;
 ## end
 
-   return( my.IQMmodel )
+   return( list( IQMmodel = my.IQMmodel ) )
 
 } ## end of the main function
 
@@ -651,7 +667,7 @@ getStates <- function( states ) {
     } ## end of process initial conditions
 
     ## return( list( states, algebraic, stateConstraintInfo, errorStates ) )
-    return( list( states = IQMstates ) )
+    return( list( IQMstates = IQMstates ) )
 
 ### how to receive and use IQMstates
     ##   r <- getStates( states ) # this returns states, algebraic, stateConstraintInfo and errorStates

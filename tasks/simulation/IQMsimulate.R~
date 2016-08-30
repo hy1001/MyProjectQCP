@@ -131,7 +131,7 @@ if nargin==1,
     if nargout == 1,
         varargout{1} = simulateIQM(varargin{:});
     else
-      simulateIQM(varargin{:});
+        simulateIQM(varargin{:});
     end
 else
     % Check second argument
