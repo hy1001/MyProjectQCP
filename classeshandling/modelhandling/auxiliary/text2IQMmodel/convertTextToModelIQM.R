@@ -670,9 +670,9 @@ getParameters <- function (parameters) {
     ## % get the starting indices for the parameters by finding the index
     ## % of the last '\n' before the '=' for each parameter
     ## parametersStart = regexp([10 parameters],['\n[^\n=]*=']);
-    if ( grepl( "\n*\\=", parameters ) {
+    if ( grepl( "\n*\\=", parameters ) ) {
 
-        parametersStart = as.numeric( gregexpr( "\n*\\=", parameters )[[1]] );
+	parametersStart = as.numeric( gregexpr("\\S+\\s*\\=\\s*.*\n", parameters, perl = TRUE )[[1]] );
         IQMparameters <- array( list(), length( parametersStart ) )
 
         ## % run through the parameters and process them (+1 since endindex = end-1)
@@ -683,7 +683,7 @@ getParameters <- function (parameters) {
         parNAN = 0
         ## for k = 1:length(parametersStart)-1,
         for( k in 1:( length( parametersStart ) - 1 ) ) {
-            ##     parameterString = removeCharacters(parameters(parametersStart(k):parametersStart(k+1)-1));
+	##     parameterString = removeCharacters(parameters(parametersStart(k):parametersStart(k+1)-1));
             parameterString <- removeCharacters( substr( parameters, parametersStart[ k ], parametersStart[ k + 1 ] - 1 ) )
 
             
@@ -745,7 +745,7 @@ getParameters <- function (parameters) {
             }
 
             ##     IQMparameters(k).name = removeWhiteSpace(test);
-            IQMparamets[[ k ]]$name <- removeWhiteSpace( test )
+            IQMparameters[[ k ]]$name <- removeWhiteSpace( test )
             
             ##     % extract the parameter value
             ##     % check if it has a numerical value
@@ -769,7 +769,7 @@ getParameters <- function (parameters) {
                 value = as.numeric( removeWhiteSpace( substr( test, 1, temp - 1 ) ) )
                 notes = substr( test, temp + 1, nchar( parameterString ) )
             } else {
-                value = as.numeric( removewhiteSpace( test ) )
+                value = as.numeric( removeWhiteSpace( test ) )
                 notes = ""
             }
 
