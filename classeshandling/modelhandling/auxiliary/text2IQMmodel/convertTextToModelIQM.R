@@ -768,6 +768,7 @@ getParameters <- function (parameters) {
             if ( temp > 0 ) {
                 value = as.numeric( removeWhiteSpace( substr( test, 1, temp - 1 ) ) )
                 notes = substr( test, temp + 1, nchar( parameterString ) )
+		notes = gsub( "^\\s+|\\s+$", "", notes )
             } else {
                 value = as.numeric( removeWhiteSpace( test ) )
                 notes = ""
@@ -890,32 +891,59 @@ return( list( IQMvariables = IQMvariables, error = error ) )
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## function [IQMreactions, error] = getReactions(reactions)
-## error = '';
-## %    reactions = removeWhiteSpace(reactions);
+getReactions <- function( reactions ) {
+
 ## IQMreactions = struct('name',{},'formula',{},'notes',{},'reversible',{},'fast',{});
-## % get the starting indices for the reactions by finding the index
-## % of the last '\n' before the '=' for each reaction
-## reactionsStart = regexp([10 reactions],['\n[^\n=]*=']);
+   error = '';
+
+    if ( grepl( "\n*\\=", reactions ) ) {
+       ## IQMreactions = struct('name',{},'formula',{},'notes',{},'reversible',{},'fast',{});
+       ## % get the starting indices for the reactions by finding the index
+       ## % of the last '\n' before the '=' for each reaction
+       ## reactionsStart = regexp([10 reactions],['\n[^\n=]*=']);
+
+       reactionsStart <- as.numeric( gregexpr("\\S+\\s*\\=\\s*.*\n", reactions, perl = TRUE )[[1]] );
+        IQMreactions <- array( list(), length( reactionsStart ) )
+
 ## % run through the reactions and process them (+1 since endindex = end-1)
 ## reactionsStart = [reactionsStart length(reactions)+1];
+   reactionsStart = c( reactionsStart, nchar( reactions ) + 1 )
+   
 ## for k = 1:length(reactionsStart)-1,
+   for ( k in 1: ( length(reactionsStart) - 1 ) ) {
 ##     reactionString = removeCharacters(reactions(reactionsStart(k):reactionsStart(k+1)-1));
+       reactionString = removeCharacters( substr( reactions, reactionsStart[ k ], reactionsStart[ k + 1 ] - 1 ))
+       
 ##     % extract the reaction name
 ##     temp = strfind(reactionString,'=');
 ##     test = reactionString(1:temp(1)-1);
+       temp = regexpr( "=", reactionString )[1]
+       test = substr( reactionString, 1, temp - 1)
+
 ##     % check if reaction name given
 ##     if isempty(test),
 ##         error = sprintf('At least one reaction name not given.');
 ##         return
 ##     end
+       if ( !nzchar( test ) ) {
+       	  error = 'At least one reaction name not given.';
+	  ## return
+       }
+       
 ##     IQMreactions(k).name = removeWhiteSpace(test);
+       IQMreactions[[ k ]]$name = removeWhiteSpace( test );
+
 ##     % extract the reaction value
 ##     test = reactionString(temp+1:end);
+       test = substr( reactionString, temp + 1, nchar( reactionString ) )
+
 ##     % The test string contains now the reaction expression, an optional
 ##     % "[reversible]" identifier and eventually also a comment that should be
 ##     % written into notes. 
 ##     % check if a comment is present
 ##     temp = strfind(test,'%');
+       temp = regexpr( "%", test )[1]       
+
 ##     if ~isempty(temp),
 ##         reaction = removeWhiteSpace(test(1:temp(1)-1));
 ##         notes = strtrim(test(temp(1)+1:end));
@@ -923,6 +951,15 @@ return( list( IQMvariables = IQMvariables, error = error ) )
 ##         reaction = removeWhiteSpace(test);
 ##         notes = '';
 ##     end
+       if ( temp > 0 ) {
+       	  reaction = removeWhiteSpace( substr( test, 1, temp - 1 ) )
+	  notes = substr( test, temp + 1, nchar( reactionString ) )
+	  notes = gsub( "^\\s+|\\s+$", "", notes )
+       } else {
+       	  reaction = removeWhiteSpace( test )
+	  notes = ''
+       }
+
 ##     % finally check if the "{reversible}" identifier is present.
 ##     temp = strfind(lower(reaction),'{reversible}');
 ##     if ~isempty(temp),
@@ -951,15 +988,30 @@ return( list( IQMvariables = IQMvariables, error = error ) )
 ##         error = sprintf('At least one reaction definition not given.');
 ##         return
 ##     end
+
 ##     IQMreactions(k).formula = reaction;
+       IQMreactions[[ k ]]$formula = reaction
+       
 ##     % add default notes to reaction
 ##     IQMreactions(k).notes = notes;
+       IQMreactions[[ k ]]$notes = notes
+
 ##     % add the reversible flag
 ##     IQMreactions(k).reversible = reversibleFlag;
+
 ##     % add the fast flag
 ##     IQMreactions(k).fast = fastFlag;
+
+       } ## end of for loop
+
+    } else {
+       IQMreactions <- array( list(), 0 )
+    }
+
 ## end
 ## return
+    return( list( IQMreactions = IQMreactions, error = error ))
+} ## end of getReaction func
 
 ## %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ## function [IQMfunctions, error] = getFunctions(functions)
