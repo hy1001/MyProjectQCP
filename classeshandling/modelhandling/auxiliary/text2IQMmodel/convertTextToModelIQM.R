@@ -216,9 +216,8 @@ getStates <- function( states ) {
 
     ODEtest = as.numeric( gregexpr( "d\\/dt\\(", states )[[1]] )
     IQMstates <- array( list(), length( ODEtest ) )
-
     ##   ARtest = as.numeric( gregexpr( "0\ \\= ", states) [[1]]) ## I need to test this!
-    ICtest = as.numeric( gregexpr( "\\(0\\)", states) [[1]])
+    ICtest = as.numeric( gregexpr( "\\(0\\)", states) [[1]]) ##  ttt <- gregexpr( "\\S+\\(0\\)\\s*\\=\\s*\\S+\n", states)
     
     ## % check if they come subsequently
     ## if ~isempty(ICtest),
@@ -564,17 +563,21 @@ getStates <- function( states ) {
     ## if ~isempty(strfind(states,'(0)')),
     if ( grepl( "\\(0\\)", states ) ) { ## if states do have initial conditions
 
-        temp <- gregexpr ( "\n\\S*\\(0\\) \\= [0-9]\\.[0-9]*", states , perl = TRUE)[[1]]
+        temp <- gregexpr ( "\n\\S*\\(0\\)\\s*\\=\\s*[0-9]\\.[0-9]*", states , perl = TRUE)[[1]]
         ICstring <- substring( states, temp + 1, temp + attr( temp, "match.length" ) - 1 )
 
-        ##     initialConditionsStart = [initialConditionsStart length(states)+1];
+## print( ICstring )
+
+##     initialConditionsStart = [initialConditionsStart length(states)+1];
         
         ##     for k1 = 1:length(initialConditionsStart)-1,
         for ( k1 in 1:length( ICstring ) ) {
 
             ##         ICString = removeWhiteSpace(removeCharacters(states(initialConditionsStart(k1):initialConditionsStart(k1+1)-1)));
-            ICstring.k <- removeWhiteSpace( removeCharacters( ICstring[ k ] ) )
-            
+            ICstring.k <- removeWhiteSpace( removeCharacters( ICstring[ k1 ] ) )
+
+## print( ICstring.k )
+
             ##         % extract the state name
             ##         temp = strfind(ICString,'(0)');
             temp = regexpr( "\\(0\\)", ICstring.k )[1]
