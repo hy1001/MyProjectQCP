@@ -140,8 +140,54 @@ nargin = nargs();
 
 if ( nargin == 1 ){
 
-  simulateIQM( model )
 
+
+### make a parameter vector
+
+eval( parse ( text = paste( unlist( lapply( model$parameters, function( x ) { return  ( paste( x$name, " = ", x$value, sep = "" ) ) } ) ), sep= " ", collapse =";\n") ) )
+
+eval( parse(
+      text = paste ( "parameters <- c( ", paste( unlist ( lapply( model$parameters, function( x ) { return  ( paste( x$name, "=", x$value, sep = "" ) ) } ) ), collapse = "," ),
+            " );", sep ="")
+	    ) )
+
+### make yini
+
+eval( parse( text = paste ( "yini <- c( ", paste( unlist ( lapply( model$states, function( x ) { return  ( paste( x$name, "=", x$initialCondition, sep = "" ) ) } ) ),
+collapse = "," ), " );", sep ="") ) )
+
+### make function
+
+eval( parse (
+      text =
+            paste (  model$name , " <- function( t, y, parameters ) {\n"
+	                , " with( as.list( c(y, parameters) ), {\n\t"
+			            ###     , " with( as.list(  y  ), {\n\t"
+				                ### reactions
+						            , paste( unlist( lapply( model$reactions, function( x ) { return ( paste (  x$name, " = ", x$formula , sep = "") )  } ) ), collapse = ";\n\t" )
+							                , ";\n"
+									            ### d.e's
+										                , paste( unlist( lapply( model$states, function( x ) { return ( paste ( "d",  x$name, " = ", x$ODE  , sep = "") )  } ) ), collapse = ";\n\t" )
+												            , ";\n"
+													                , paste( "\treturn ( list( c( ",
+															            paste( unlist( lapply( model$states, function( x ) { return ( paste ( "d",  x$name, sep = "") )  } ) ), collapse = " , " )
+																                ," ) ) )" , sep = "")
+																		            , "\n} )"
+																			                , "\n} "
+																					            , sep = "")
+																						    ) )
+
+
+
+### make times
+
+times <- seq( from = 0, to = 400 )
+
+out <- ode( y = yini, times = times, func = CellCycle, parms = parameters )
+
+    ##return ( simulateIQM( model ) )
+    return( out )
+  
 }
 
 ### else
@@ -163,5 +209,5 @@ if ( nargin == 1 ){
 ###     end
 ### end
 
-return( varargout )
+### return( varargout )
 }
