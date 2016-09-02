@@ -101,6 +101,10 @@ parameterValuesNew_ALL = c();
 ###     end
 ###     ic = [];
 ###     options = [];
+# else if ( ) {
+
+#}
+
 ### elseif nargin == 3,
 ###     model = varargin{1};
 ###     method = varargin{2};

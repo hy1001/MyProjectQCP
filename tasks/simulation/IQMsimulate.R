@@ -144,8 +144,6 @@ if ( nargin == 1 ){
 
 ### make a parameter vector
 
-eval( parse ( text = paste( unlist( lapply( model$parameters, function( x ) { return  ( paste( x$name, " = ", x$value, sep = "" ) ) } ) ), sep= " ", collapse =";\n") ) )
-
 eval( parse(
       text = paste ( "parameters <- c( ", paste( unlist ( lapply( model$parameters, function( x ) { return  ( paste( x$name, "=", x$value, sep = "" ) ) } ) ), collapse = "," ),
             " );", sep ="")
