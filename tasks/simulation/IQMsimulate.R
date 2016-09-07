@@ -1,6 +1,6 @@
 ### function [varargout] = IQMsimulate(varargin)
 
-  IQMsimulate <- function ( model, ... ) {
+  IQMsimulate <- function ( model, times = seq( 0, 100 ), ... ) {
   
 ### % IQMsimulate: This function is a wrapper function for two different types of simulation:
 ### %
@@ -138,55 +138,50 @@ nargin = nargs();
 ###         simulateIQM(varargin{:});
 ###     end
 
-if ( nargin == 1 ){
+## if ( nargin == 1 ){
+## ### make times
+##     times <- seq( from = 0, to = 20 )
+## } else
 
-
+if ( nargin == 2 ) {
+    times <- times
+}
 
 ### make a parameter vector
-
-eval( parse(
-      text = paste ( "parameters <- c( ", paste( unlist ( lapply( model$parameters, function( x ) { return  ( paste( x$name, "=", x$value, sep = "" ) ) } ) ), collapse = "," ),
+    eval( parse(
+        text = paste ( "parameters <- c( ", paste( unlist ( lapply( model$parameters, function( x ) { return  ( paste( x$name, "=", x$value, sep = "" ) ) } ) ), collapse = "," ),
             " );", sep ="")
-	    ) )
+    ) )
 
 ### make yini
-
-eval( parse( text = paste ( "yini <- c( ", paste( unlist ( lapply( model$states, function( x ) { return  ( paste( x$name, "=", x$initialCondition, sep = "" ) ) } ) ),
-collapse = "," ), " );", sep ="") ) )
+    eval( parse( text = paste ( "yini <- c( ", paste( unlist ( lapply( model$states, function( x ) { return  ( paste( x$name, "=", x$initialCondition, sep = "" ) ) } ) ),
+                     collapse = "," ), " );", sep ="") ) )
 
 ### make function
-
-eval( parse (
-      text =
+    eval( parse (
+        text =
             paste (  model$name , " <- function( t, y, parameters ) {\n"
-	                , " with( as.list( c(y, parameters) ), {\n\t"
-			            ###     , " with( as.list(  y  ), {\n\t"
-				                ### reactions
-						            , paste( unlist( lapply( model$reactions, function( x ) { return ( paste (  x$name, " = ", x$formula , sep = "") )  } ) ), collapse = ";\n\t" )
-							                , ";\n"
-									            ### d.e's
-										                , paste( unlist( lapply( model$states, function( x ) { return ( paste ( "d",  x$name, " = ", x$ODE  , sep = "") )  } ) ), collapse = ";\n\t" )
-												            , ";\n"
-													                , paste( "\treturn ( list( c( ",
-															            paste( unlist( lapply( model$states, function( x ) { return ( paste ( "d",  x$name, sep = "") )  } ) ), collapse = " , " )
-																                ," ) ) )" , sep = "")
-																		            , "\n} )"
-																			                , "\n} "
-																					            , sep = "")
-																						    ) )
-
-
-
-### make times
-
-times <- seq( from = 0, to = 400 )
+                 , " with( as.list( c(y, parameters) ), {\n\t"
+###     , " with( as.list(  y  ), {\n\t"
+### reactions
+                 , paste( unlist( lapply( model$reactions, function( x ) { return ( paste (  x$name, " = ", x$formula , sep = "") )  } ) ), collapse = ";\n\t" )
+                 , ";\n"
+### d.e's
+                 , paste( unlist( lapply( model$states, function( x ) { return ( paste ( "d",  x$name, " = ", x$ODE  , sep = "") )  } ) ), collapse = ";\n\t" )
+                 , ";\n"
+                 , paste( "\treturn ( list( c( ",
+                         paste( unlist( lapply( model$states, function( x ) { return ( paste ( "d",  x$name, sep = "") )  } ) ), collapse = " , " )
+                        ," ) ) )" , sep = "")
+                 , "\n} )"
+                 , "\n} "
+                 , sep = "")
+    ) )
 
 out <- ode( y = yini, times = times, func = CellCycle, parms = parameters )
+##return ( simulateIQM( model ) )
 
-    ##return ( simulateIQM( model ) )
-    return( out )
-  
-}
+
+return( out )
 
 ### else
 ###     % Check second argument

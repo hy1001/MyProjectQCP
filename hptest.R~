@@ -1,0 +1,3 @@
+library( deSolve )
+
+out <- IQMsimulate( my.model, time = seq( 0, 30 ) )
