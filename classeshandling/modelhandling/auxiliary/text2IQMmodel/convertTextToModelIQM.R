@@ -563,7 +563,7 @@ getStates <- function( states ) {
     ## if ~isempty(strfind(states,'(0)')),
     if ( grepl( "\\(0\\)", states ) ) { ## if states do have initial conditions
 
-        temp <- gregexpr ( "\n\\S*\\(0\\)\\s*\\=\\s*[0-9]\\.[0-9]*", states , perl = TRUE)[[1]]
+        temp <- gregexpr ( "\n\\S*\\(0\\)\\s*\\=\\s*[0-9]\\.*[0-9]*", states , perl = TRUE)[[1]]
         ICstring <- substring( states, temp + 1, temp + attr( temp, "match.length" ) - 1 )
 
 ## print( ICstring )

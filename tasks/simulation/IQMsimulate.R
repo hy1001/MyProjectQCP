@@ -177,7 +177,11 @@ if ( nargin == 2 ) {
                  , sep = "")
     ) )
 
-out <- ode( y = yini, times = times, func = CellCycle, parms = parameters )
+##out <- ode( y = yini, times = times, func = CellCycle, parms = parameters )
+
+eval( parse ( text = paste ( "out <- ode( y = yini, times = times, func = ", model$name, ", parms = parameters )", sep = "" ) ) ) 
+
+
 ##return ( simulateIQM( model ) )
 
 
